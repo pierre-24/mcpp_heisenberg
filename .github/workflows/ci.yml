@@ -56,7 +56,6 @@ jobs:
           MESON_NUM_PROCESSES=1
           MESON_TESTTHREADS=1
           meson test
-          --suite=pstdlite:lib_code
           --print-errorlogs
           -C ${{ env.BUILD_DIR }}
       - name: Memcheck (with Meson & Valgdrind & OMP_NUM_THREADS = 1)
@@ -66,7 +65,6 @@ jobs:
           MESON_NUM_PROCESSES=${{ env.NTHREADS }}
           MESON_TESTTHREADS=${{ env.NTHREADS }}
           meson test
-          --suite=pstdlite:lib_code
           --print-errorlogs
           --timeout-multiplier 0
           --wrap='valgrind --leak-check=full --error-exitcode=1 --suppressions=../suppress.valgrind'
@@ -86,6 +84,3 @@ jobs:
       - name: lint
         run: |
           make lint
-      - name: List TODO
-        run: |
-          make todo
