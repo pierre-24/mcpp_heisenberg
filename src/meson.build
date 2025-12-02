@@ -1,4 +1,5 @@
 lib_srcs = files(
+    'logging.cpp',
     'geometry.cpp',
 )
 
@@ -11,6 +12,11 @@ lib_deps = []
 fmt_proj = subproject('fmt')
 fmt_dep = fmt_proj.get_variable('fmt_dep')
 lib_deps += fmt_dep
+
+# add plog
+plog_proj = subproject('sergiusthebest-plog')
+plog_dep = plog_proj.get_variable('plog_dep')
+lib_deps += plog_dep
 
 # add armadillo
 armadillo_proj = subproject('armadillo', default_options: ['use_lapack=true', 'use_blas=true'])

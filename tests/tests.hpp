@@ -2,6 +2,7 @@
 #define TESTS_TESTS_HPP_
 
 #include <gtest/gtest.h>
+#include <mcpp_heisenberg/logging.hpp>
 
 class MCHTestsSuite : public testing::Test {
  public:

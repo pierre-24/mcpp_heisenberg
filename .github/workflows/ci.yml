@@ -67,7 +67,7 @@ jobs:
           meson test
           --print-errorlogs
           --timeout-multiplier 0
-          --wrap='valgrind --leak-check=full --error-exitcode=1 --suppressions=../suppress.valgrind'
+          --wrap='valgrind --leak-check=full --error-exitcode=1'
           -C ${{ env.BUILD_DIR }}
 
   lint:
