@@ -110,3 +110,20 @@ TEST_F(MCTestsSuite, TestSquareSave) {
 
   EXPECT_TRUE(std::filesystem::remove(temp_path));
 }
+
+/// Test square cluster update
+TEST_F(MCTestsSuite, TestSquareClusterUpdate) {
+  uint64_t MAX = 25;
+
+  auto runner = mch::MonteCarloRunner(square_hamiltonian);
+  double T = 0.1;
+
+  arma::mat stats(MAX, 2);
+
+  for (uint64_t i = 0; i < MAX; ++i) {
+    runner.cluster_update(T);
+    stats.row(i) = {runner.energy(), arma::sum(runner.spins())};
+  }
+
+  LOGD << stats.col(1);
+}

@@ -89,6 +89,14 @@ class Hamiltonian {
   /// Compute the change in energy due to flip of spin `i`
   [[nodiscard]] double delta_energy(const arma::vec& spins, uint64_t i) const;
 
+  /// Get neighbors of i
+  neighborlist_t neighbor(uint64_t i) {
+    assert(i < _N);
+
+    return _neighbor_list[i];
+  }
+
+  /// Create Hamiltonian from a geometry
   static Hamiltonian from_geometry(
       const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::vector<jpairdef_t> pair_defs);
 };

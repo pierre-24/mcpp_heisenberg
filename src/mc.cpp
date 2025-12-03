@@ -1,6 +1,8 @@
 #include <mcpp_heisenberg/mc.hpp>
 
 #include <vector>
+#include <queue>
+#include <set>
 
 namespace mch {
 
@@ -19,6 +21,47 @@ void MonteCarloRunner::sweep(double T, double H) {
       _energy += dE;
     }
   }
+
+  _save_to_frame();
+}
+
+void MonteCarloRunner::cluster_update(double T, double H) {
+  assert(T > 0);
+
+  // pick a spin
+  uint64_t i = std::uniform_int_distribution<>(0, _hamiltonian.N() - 1)(_rng);
+
+  // select cluster
+  std::uniform_real_distribution<> dis(.0, 1.);
+
+  std::set<uint64_t> cluster;
+  cluster.insert(i);
+
+  std::queue<uint64_t> newly_added;
+  newly_added.push(i);
+
+  while (!newly_added.empty()) {
+    uint64_t j = newly_added.front();
+    newly_added.pop();
+
+    for (auto& neighbor : _hamiltonian.neighbor(j)) {
+      uint64_t k = neighbor.first;
+      if (!cluster.contains(k)
+          && (_spins.at(j) == _spins.at(k))
+          && (dis(_rng) < (1 - exp(-2 * neighbor.second / T)))) {
+        cluster.insert(k);
+        newly_added.push(k);
+      }
+    }
+  }
+
+  // swap
+  for (auto& ispin : cluster) {
+    _spins.at(ispin) *= -1;
+  }
+
+  // re-compute energy
+  _energy = _hamiltonian.energy(_spins);
 
   _save_to_frame();
 }

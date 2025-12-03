@@ -63,6 +63,9 @@ class MonteCarloRunner {
   /// Sweep over all spins (at a given temperature `T` and a given magnetic field `H`) and switch them if any
   void sweep(double T, double H = .0);
 
+  /// do a cluster update
+  void cluster_update(double T, double H = .0);
+
   /// Save results in `group`
   void save(HighFive::Group& group);
 };
