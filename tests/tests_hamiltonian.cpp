@@ -80,3 +80,28 @@ TEST_F(HamiltonianTestsSuite, TestCubic) {
   auto spins = arma::vec(hamiltonian.N(), arma::fill::ones);
   EXPECT_NEAR(hamiltonian.energy(spins), -3.0 * hamiltonian.N(), 1e-5);  // 6 interactions per site
 }
+
+/// Test ΔE due to flippling one spin
+TEST_F(HamiltonianTestsSuite, TestSquareDeltaE) {
+  arma::mat lattice = arma::eye(3, 3);
+  lattice.at(0, 0) = 2;
+  lattice.at(1, 1) = 2;
+  lattice.at(2, 2) = 100;
+
+  arma::mat positions = arma::mat(1, 3);
+
+  auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(4, 4, 1);
+
+  auto hamiltonian = mch::Hamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
+
+  for (int i = 0; i < 50; ++i) {
+    auto spins = arma::vec(hamiltonian.N(), arma::fill::randu);
+    spins.for_each([](double& e) { e = e > .5 ? 1.0 : -1.0; });
+
+    double Eb = hamiltonian.energy(spins);
+    double dE = hamiltonian.delta_energy(spins, 1);
+
+    spins.at(1) *= -1;
+    EXPECT_NEAR(dE, hamiltonian.energy(spins) - Eb, 1e-4);
+  }
+}

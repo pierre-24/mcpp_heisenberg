@@ -5,18 +5,18 @@
 namespace mch {
 
 void MonteCarloRunner::sweep(double T, double H) {
+  assert(T > 0);
+
   LOGV << "Sweep at T=" << T << ", H=" << H;
 
   std::uniform_real_distribution<> dis(.0, 1.);
 
   for (uint64_t ispin = 0; ispin < _hamiltonian.N(); ++ispin) {
-    _spins.at(ispin) *= -1;
-    double nE = _hamiltonian.energy(_spins);
+    double dE = _hamiltonian.delta_energy(_spins, ispin);
 
-    if ((nE < _energy) || (dis(_rng) < exp(-(nE - _energy) / T))) {
-      _energy = nE;
-    } else {
+    if ((dE < 0) || (dis(_rng) < exp(-dE / T))) {
       _spins.at(ispin) *= -1;
+      _energy += dE;
     }
   }
 
@@ -24,6 +24,8 @@ void MonteCarloRunner::sweep(double T, double H) {
 }
 
 void MonteCarloRunner::save(HighFive::Group& group) {
+  LOGD << "Save MC";
+
   std::vector<uint64_t> info = {_hamiltonian.N(), _frames.size()};
   group.createDataSet<uint64_t>("info", HighFive::DataSpace::From(info)).write(info);
 

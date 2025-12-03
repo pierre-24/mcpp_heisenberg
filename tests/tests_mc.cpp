@@ -9,7 +9,7 @@
 class MCTestsSuite : public MCHTestsSuite {
  protected:
   mch::Hamiltonian square_hamiltonian;
-  uint64_t N = 5;
+  uint64_t N = 10;
 
   MCTestsSuite() {
     arma::mat lattice = arma::eye(3, 3);

@@ -37,9 +37,9 @@ class MonteCarloRunner {
     _rng = std::mt19937(rd());
 
     // choose a random configuration
-    auto config = arma::randi<arma::vec>(hamiltonian.N(), arma::distr_param(0, 1));
-    config.for_each([](double& val) { val = (val == 0) ? -1. : val; });
-    set_spins(config);
+    auto spins = arma::vec(hamiltonian.N(), arma::fill::randu);
+    spins.for_each([](double& e) { e = e >= .5 ? 1.0 : -1.0; });
+    set_spins(spins);
   }
 
   /// Get current spin configuration

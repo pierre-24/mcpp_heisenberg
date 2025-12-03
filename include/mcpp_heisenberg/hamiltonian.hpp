@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <utility>
 #include <string>
+#include <map>
+#include <set>
 
 #include <mcpp_heisenberg/arma.hpp>
 #include <mcpp_heisenberg/geometry.hpp>
@@ -47,22 +49,45 @@ struct jpairdef_t {
  * Heisenberg Hamiltonian
  */
 class Hamiltonian {
+  using neighborlist_t = std::set<std::pair<uint64_t, double>>;
+
  protected:
   /// Number of magnetic site/spins
   uint64_t _N{0};
   /// (unique) interaction pairs
   std::vector<jpair_t> _pairs;
+  /// Neighbour list
+  std::map<uint64_t, neighborlist_t> _neighbor_list;
+
  public:
   Hamiltonian() = default;
 
   /// Create an Heisenberg hamiltonian, with `N` sites and `pairs` pair interactions
-  Hamiltonian(uint64_t N, const std::vector<jpair_t>& pairs): _N{N}, _pairs(pairs) {}
+  Hamiltonian(uint64_t N, const std::vector<jpair_t>& pairs): _N{N}, _pairs(pairs) {
+    // build the neighbor list
+    for (auto& pair : _pairs) {
+      if (!_neighbor_list.contains(pair.first.first)) {
+        _neighbor_list[pair.first.first] = neighborlist_t();
+      }
+
+      _neighbor_list[pair.first.first].insert({pair.first.second, pair.second});
+
+      if (!_neighbor_list.contains(pair.first.second)) {
+        _neighbor_list[pair.first.second] = neighborlist_t();
+      }
+
+      _neighbor_list[pair.first.second].insert({pair.first.first, pair.second});
+    }
+  }
 
   /// Get number of sites
   uint64_t N() const { return _N; }
 
   /// Compute the energy
   [[nodiscard]] double energy(const arma::vec& spins) const;
+
+  /// Compute the change in energy due to flip of spin `i`
+  [[nodiscard]] double delta_energy(const arma::vec& spins, uint64_t i) const;
 
   static Hamiltonian from_geometry(
       const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::vector<jpairdef_t> pair_defs);

@@ -80,4 +80,16 @@ const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::v
   return {N, pairs};
 }
 
+double Hamiltonian::delta_energy(const arma::vec& spins, uint64_t i) const {
+  assert(i < _N);
+
+  double dE = .0;
+
+  for (auto& neighbor : _neighbor_list.at(i)) {
+    dE += neighbor.second * spins.at(neighbor.first);
+  }
+
+  return 2 * spins.at(i) * dE;
+}
+
 }  // namespace mch
