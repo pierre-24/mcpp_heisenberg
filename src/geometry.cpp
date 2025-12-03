@@ -197,6 +197,8 @@ mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) 
 }
 
 mch::Geometry mch::Geometry::to_supercell(uint64_t nx, uint64_t ny, uint64_t nz, bool sort) const {
+  LOGD << "Make " << nx << "x" << ny << "x" << nz << " supercell";
+
   // make new positions and ions
   std::vector<ion_type_t> ions;
   uint64_t n = _positions.n_rows;

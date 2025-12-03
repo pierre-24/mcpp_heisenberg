@@ -5,8 +5,10 @@
 #include <vector>
 #include <cstdint>
 #include <utility>
+#include <string>
 
 #include <mcpp_heisenberg/arma.hpp>
+#include <mcpp_heisenberg/geometry.hpp>
 
 namespace mch {
 
@@ -28,6 +30,19 @@ class Approx {
 
 using jpair_t = std::pair<std::pair<uint64_t, uint64_t>, double>;
 
+struct jpairdef_t {
+  /// Magnetic sites
+  std::string site_1, site_2;
+  /// Distance criterion
+  double distance;
+  /// Coupling value to apply if matched
+  double J;
+
+  bool match(std::string s1, std::string s2, double d, double delta = 1e-3) {
+    return ((s1 == site_1 && s2 == site_2) || (s1 == site_2 && s2 == site_1)) && (Approx(distance, delta) == d);
+  }
+};
+
 /**
  * Heisenberg Hamiltonian
  */
@@ -48,6 +63,9 @@ class Hamiltonian {
 
   /// Compute the energy
   double energy(const arma::uvec& spins) const;
+
+  static Hamiltonian from_geometry(
+      const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::vector<jpairdef_t> pair_defs);
 };
 
 }  // namespace mch
