@@ -1,4 +1,5 @@
 lib_srcs = files(
+    'hamiltonian.cpp',
     'logging.cpp',
     'geometry.cpp',
 )

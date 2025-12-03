@@ -111,6 +111,8 @@ class Geometry {
   arma::mat _positions;
 
  public:
+  Geometry() = delete;
+
   Geometry(
       const std::string& title, const arma::mat& lattice, const std::vector<ion_type_t>& ions, const arma::mat& pos):
   _title(title), _lattice_vectors(lattice), _ions(ions), _positions(pos) {
