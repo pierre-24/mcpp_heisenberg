@@ -7,7 +7,7 @@
 
 namespace mch {
 
-double Hamiltonian::energy(const arma::uvec &spins) const {
+double Hamiltonian::energy(const arma::vec &spins) const {
   assert(spins.n_rows == _N);
 
   double energy = .0;
@@ -77,7 +77,7 @@ const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::v
 
   LOGD << "Done with list, got " << pairs.size() << " pairs";
 
-  return Hamiltonian(N, pairs);
+  return {N, pairs};
 }
 
 }  // namespace mch

@@ -2,6 +2,7 @@ lib_srcs = files(
     'hamiltonian.cpp',
     'logging.cpp',
     'geometry.cpp',
+    'mc.cpp',
 )
 
 includes = include_directories('../include')
@@ -18,6 +19,8 @@ lib_deps += fmt_dep
 plog_proj = subproject('sergiusthebest-plog')
 plog_dep = plog_proj.get_variable('plog_dep')
 lib_deps += plog_dep
+
+build_args += '-DPLOG_CAPTURE_FILE'
 
 # add armadillo
 armadillo_proj = subproject('armadillo', default_options: ['use_lapack=true', 'use_blas=true'])

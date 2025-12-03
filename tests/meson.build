@@ -11,6 +11,7 @@ tests_deps += gtest_dep
 tests = [
     'hamiltonian',
     'geometry',
+    'mc',
 ]
 
 tests_srcs = []

@@ -18,7 +18,7 @@ TEST_F(HamiltonianTestsSuite, TestLinear) {
       {{2, 3}, 1.},
   });
 
-  auto spins = arma::uvec(hamiltonian.N(), arma::fill::ones);
+  auto spins = arma::vec(hamiltonian.N(), arma::fill::ones);
 
   EXPECT_NEAR(hamiltonian.energy(spins), -1.0 * hamiltonian.N(), 1e-5);  // 2 interactions per site
 }
@@ -38,7 +38,7 @@ TEST_F(HamiltonianTestsSuite, TestChain) {
 
   EXPECT_EQ(hamiltonian.N(), 4);
 
-  auto spins = arma::uvec(hamiltonian.N(), arma::fill::ones);
+  auto spins = arma::vec(hamiltonian.N(), arma::fill::ones);
   EXPECT_NEAR(hamiltonian.energy(spins), -1.0 * hamiltonian.N(), 1e-5);
 }
 
@@ -57,7 +57,7 @@ TEST_F(HamiltonianTestsSuite, TestSquare) {
 
   EXPECT_EQ(hamiltonian.N(), 16);
 
-  auto spins = arma::uvec(hamiltonian.N(), arma::fill::ones);
+  auto spins = arma::vec(hamiltonian.N(), arma::fill::ones);
   EXPECT_NEAR(hamiltonian.energy(spins), -2.0 * hamiltonian.N(), 1e-5);  // 4 interactions per site
 }
 
@@ -77,6 +77,6 @@ TEST_F(HamiltonianTestsSuite, TestCubic) {
 
   EXPECT_EQ(hamiltonian.N(), 64);
 
-  auto spins = arma::uvec(hamiltonian.N(), arma::fill::ones);
+  auto spins = arma::vec(hamiltonian.N(), arma::fill::ones);
   EXPECT_NEAR(hamiltonian.energy(spins), -3.0 * hamiltonian.N(), 1e-5);  // 6 interactions per site
 }

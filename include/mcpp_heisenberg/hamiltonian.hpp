@@ -23,7 +23,7 @@ class Approx {
  public:
   explicit Approx(double val, double delta = .0): _val{val}, _delta{delta} {}
 
-  bool operator==(double other) {
+  bool operator==(double other) const {
     return fabs(other - _val) < _delta;
   }
 };
@@ -38,7 +38,7 @@ struct jpairdef_t {
   /// Coupling value to apply if matched
   double J;
 
-  bool match(std::string s1, std::string s2, double d, double delta = 1e-3) {
+  [[nodiscard]] bool match(const std::string& s1, const std::string& s2, double d, double delta = 1e-3) const {
     return ((s1 == site_1 && s2 == site_2) || (s1 == site_2 && s2 == site_1)) && (Approx(distance, delta) == d);
   }
 };
@@ -62,7 +62,7 @@ class Hamiltonian {
   uint64_t N() const { return _N; }
 
   /// Compute the energy
-  double energy(const arma::uvec& spins) const;
+  [[nodiscard]] double energy(const arma::vec& spins) const;
 
   static Hamiltonian from_geometry(
       const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::vector<jpairdef_t> pair_defs);
