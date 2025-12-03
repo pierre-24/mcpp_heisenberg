@@ -22,6 +22,11 @@ lib_deps += plog_dep
 
 build_args += '-DPLOG_CAPTURE_FILE'
 
+# add highfive
+highfive_proj = subproject('highfive')
+highfive_dep = highfive_proj.get_variable('highfive_dep')
+lib_deps += highfive_dep
+
 # add armadillo
 armadillo_proj = subproject('armadillo', default_options: ['use_lapack=true', 'use_blas=true'])
 armadillo_dep = armadillo_proj.get_variable('armadillo_dep')

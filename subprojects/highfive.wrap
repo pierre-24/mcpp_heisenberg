@@ -1,0 +1,9 @@
+[wrap-git]
+url = https://github.com/highfive-devs/highfive.git
+revision = v2.10.1
+depth = 1
+
+patch_directory = highfive
+
+[provide]
+highfive = highfive_dep

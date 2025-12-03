@@ -2,6 +2,11 @@
 #define INCLUDE_MCPP_HEISENBERG_MC_HPP_
 
 #include <random>
+#include <vector>
+#include <utility>
+
+#include <highfive/highfive.hpp>
+
 #include <mcpp_heisenberg/hamiltonian.hpp>
 
 namespace mch {
@@ -16,6 +21,12 @@ class MonteCarloRunner {
   double _energy;
   /// Generator
   std::mt19937 _rng;
+
+  /// Frames
+  std::vector<std::pair<double, arma::vec>> _frames;
+
+  /// Save current config in frame
+  void _save_to_frame() { _frames.push_back(std::make_pair(_energy, _spins)); }
 
  public:
   explicit MonteCarloRunner(const Hamiltonian& hamiltonian): _hamiltonian{hamiltonian} {
@@ -39,13 +50,21 @@ class MonteCarloRunner {
     assert(config.n_rows == _hamiltonian.N());
     _spins = config;
     _energy = _hamiltonian.energy(_spins);
+
+    _save_to_frame();
   }
 
   /// Get current energy
   [[nodiscard]] double energy() const { return _energy; }
 
+  /// Get number of magnetic sites
+  [[nodiscard]] uint64_t N() { return _hamiltonian.N(); }
+
   /// Sweep over all spins (at a given temperature `T` and a given magnetic field `H`) and switch them if any
   void sweep(double T, double H = .0);
+
+  /// Save results in `group`
+  void save(HighFive::Group& group);
 };
 
 }  // namespace mch
