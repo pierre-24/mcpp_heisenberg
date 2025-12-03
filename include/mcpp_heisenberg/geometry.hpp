@@ -14,6 +14,9 @@
 
 namespace mch {
 
+/**
+ * A word lexer, yield space-separated "words" (which can also be `\0` and `\n`).
+ */
 class WordLexer {
  protected:
   char _c;
@@ -40,7 +43,7 @@ class WordLexer {
   std::string next_word() {
     _skip_space();
 
-    if (_c == 0) {
+    if (_stream->eof()) {
       return "\0";
     }
 
@@ -67,8 +70,8 @@ class WordLexer {
     }
   }
 
-  /// Get double
-  double next_double() {
+  /// Get next double, yield error if not
+  double next_double_or_throw() {
     double dbl = .0;
 
     try {
@@ -80,8 +83,8 @@ class WordLexer {
     return dbl;
   }
 
-  /// Get integer
-  int64_t next_integer() {
+  /// Get next integer, yield error if not
+  int64_t next_integer_or_throw() {
     int64_t ix = 0;
 
     try {
@@ -135,7 +138,7 @@ class Geometry {
   static Geometry from_poscar(std::shared_ptr<std::istream> istream);
 
   /// Get a, b, c
-  arma::vec get_abc() {
+  arma::vec get_abc() const {
     arma::vec abc(3);
     for (uint64_t i = 0; i < 3; ++i) {
       abc.at(i) = arma::norm(_lattice_vectors.row(i));
@@ -145,7 +148,7 @@ class Geometry {
   }
 
   /// Get alpha beta gamma
-  arma::vec get_alpha_beta_gamma() {
+  arma::vec get_alpha_beta_gamma() const {
     arma::vec abg(3);
 
     auto angle_between = [](arma::rowvec v1, arma::rowvec v2) {
@@ -161,6 +164,9 @@ class Geometry {
 
     return abg;
   }
+
+  /// Create a `nx` x `ny` x `nz` supercell.
+  mch::Geometry to_supercell(uint64_t nx, uint64_t ny, uint64_t nz, bool sort = true) const;
 };
 
 }  // namespace mch

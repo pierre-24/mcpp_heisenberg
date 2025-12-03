@@ -83,3 +83,31 @@ TEST_F(GeometryTestsSuite, TestReadPoscarCartesian) {
   EXPECT_NEAR(abg.at(1), abg.at(2), 1e-5);
   EXPECT_NEAR(abg.at(0) * 180 / M_PI, 60., 1e-5);
 }
+
+TEST_F(GeometryTestsSuite, TestMakeSupercell) {
+  auto ss = std::make_shared<std::stringstream>();
+
+  (*ss) << MgO_frac;
+  ss->seekg(0);
+
+  auto geometry = mch::Geometry::from_poscar(ss);
+
+  auto supercell_raw = geometry.to_supercell(2, 1, 2, false);
+  auto supercell = geometry.to_supercell(2, 1, 2);
+
+  // check geometry
+  arma::vec abc_base = geometry.get_abc(), abc = supercell.get_abc(), abg = supercell.get_alpha_beta_gamma();
+  EXPECT_NEAR(abc.at(0), 2 * abc_base.at(0), 1e-3);
+  EXPECT_NEAR(abc.at(1), 1 * abc_base.at(1), 1e-3);
+  EXPECT_NEAR(abc.at(2), 2 * abc_base.at(2), 1e-3);
+
+  EXPECT_NEAR(abg.at(0), abg.at(1), 1e-5);
+  EXPECT_NEAR(abg.at(1), abg.at(2), 1e-5);
+  EXPECT_NEAR(abg.at(0) * 180 / M_PI, 60., 1e-5);
+
+  // check positions
+  EXPECT_TRUE(arma::approx_equal(supercell_raw.positions().row(0), supercell.positions().row(0), "abstol", 1e-5));
+  EXPECT_TRUE(arma::approx_equal(supercell_raw.positions().row(2), supercell.positions().row(1), "abstol", 1e-5));
+  EXPECT_TRUE(arma::approx_equal(supercell_raw.positions().row(4), supercell.positions().row(2), "abstol", 1e-5));
+  EXPECT_TRUE(arma::approx_equal(supercell_raw.positions().row(6), supercell.positions().row(3), "abstol", 1e-5));
+}

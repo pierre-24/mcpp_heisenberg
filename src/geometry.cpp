@@ -82,6 +82,8 @@ std::string _get_word(std::istream& istream) {
 }
 
 mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) {
+  LOGD << "start reading POSCAR";
+
   // read the first line as is
   std::string title;
 
@@ -92,14 +94,14 @@ mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) 
     c = istream->get();
   }
 
-  LOGD << "title is `" << title << "`";
+  LOGV << "title is `" << title << "`";
 
   // then create lexer
   auto lexer = WordLexer(istream);
 
   // factor
-  double factor = lexer.next_double();
-  LOGD << "factor is `" << factor << "`";
+  double factor = lexer.next_double_or_throw();
+  LOGV << "factor is `" << factor << "`";
 
   auto is_EOL = [](std::string f) { return f == "\n"; };
   lexer.skip_if(is_EOL, "expected EOL");
@@ -109,7 +111,7 @@ mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) 
 
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
-        lattice.at(i, j) = factor * lexer.next_double();
+        lattice.at(i, j) = factor * lexer.next_double_or_throw();
     }
 
     lexer.skip_if(is_EOL, "expected EOL");
@@ -128,11 +130,11 @@ mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) 
   std::vector<mch::ion_type_t> ions;
   uint64_t natoms = 0;
   for (uint64_t in = 0; in < ion_types.size(); ++in) {
-    ions.push_back(std::make_pair(ion_types[in], static_cast<uint64_t>(lexer.next_integer())));
+    ions.push_back(std::make_pair(ion_types[in], static_cast<uint64_t>(lexer.next_integer_or_throw())));
     natoms += ions.at(in).second;
   }
 
-  LOGD << "ions are " << ions;
+  LOGV << "ions are " << ions;
 
   lexer.skip_if(is_EOL, "expected EOL");
 
@@ -161,7 +163,7 @@ mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) 
 
   for (uint64_t iatm = 0; iatm < natoms; ++iatm) {
     for (int j = 0; j < 3; ++j) {
-      positions.at(iatm, j) = lexer.next_double();
+      positions.at(iatm, j) = lexer.next_double_or_throw();
     }
 
     if (iatm < natoms - 1) {  // skip whatever is remaining on that line
@@ -172,8 +174,10 @@ mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) 
     }
   }
 
+  LOGD << "done reading POSCAR";
+
   if (!is_direct) {
-    LOGD << "convert to fractional coordinates";
+    LOGV << "convert to fractional coordinates";
 
     arma::mat cartesian_positions(positions);
     arma::mat inv = arma::inv(lattice);
@@ -192,3 +196,67 @@ mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) 
   return Geometry(title, lattice, ions, positions);
 }
 
+mch::Geometry mch::Geometry::to_supercell(uint64_t nx, uint64_t ny, uint64_t nz, bool sort) const {
+  // make new positions and ions
+  std::vector<ion_type_t> ions;
+  uint64_t n = _positions.n_rows;
+  uint64_t N = nx * ny * nz;
+
+  auto positions = arma::mat(N * n, 3);
+
+  uint64_t nc = 0;
+
+  for (uint64_t ix = 0; ix < nx; ++ix) {
+    for (uint64_t jy = 0; jy < ny; ++jy) {
+      for (uint64_t kz = 0; kz < nz; ++kz) {
+        auto shift = arma::vec(3);
+        shift.at(0) = ix;
+        shift.at(1) = jy;
+        shift.at(2) = kz;
+
+        positions.rows(nc * n, (nc + 1) * n - 1) = _positions;
+        positions.rows(nc * n, (nc + 1) * n - 1).each_row() += shift.t();
+        nc++;
+
+        ions.insert(ions.end(), _ions.begin(), _ions.end());
+      }
+    }
+  }
+
+  positions.col(0) /= nx;
+  positions.col(1) /= ny;
+  positions.col(2) /= nz;
+
+  auto diagvec = arma::vec(3);
+  diagvec.at(0) = nx;
+  diagvec.at(1) = ny;
+  diagvec.at(2) = nz;
+  arma::mat lattice = (_lattice_vectors.t() * arma::diagmat(diagvec)).t();
+
+  if (sort) {
+    std::vector<ion_type_t> sorted_ions;
+    auto sorted_positions = arma::mat(N * n, 3);
+
+    uint64_t ni = 0;
+    for (auto& it : _ions) {
+      uint64_t nj = 0, nions = 0;
+      for (auto& jt : ions) {
+        uint64_t nk = jt.second;
+        if (jt.first == it.first) {
+          sorted_positions.rows(ni, ni + nk - 1) = positions.rows(nj, nj + nk - 1);
+          ni += nk;
+          nions += nk;
+        }
+
+        nj += nk;
+      }
+
+      sorted_ions.push_back(std::make_pair(it.first, nions));
+    }
+
+    ions = sorted_ions;
+    positions = sorted_positions;
+  }
+
+  return Geometry(_title, lattice, ions, positions);
+}
