@@ -1,12 +1,12 @@
 #include <mcpp_heisenberg/mc.hpp>
 
-constexpr uint64_t MAX = 1000;
-constexpr uint64_t N = 10;
+constexpr uint64_t MAX = 10000;
+constexpr uint64_t N = 20;
 
 int main() {
   mch::init_logging();
 
-  uint64_t PROD_START = 0;
+  uint64_t PROD_START = MAX / 10 * 2;
 
   arma::mat lattice = arma::eye(3, 3);
   lattice.at(0, 0) = 2;
@@ -18,7 +18,7 @@ int main() {
   auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(N, N, 1);
   auto square_hamiltonian = mch::Hamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
 
-  arma::vec temperature_range = arma::linspace(0.1, 3, 16);
+  arma::vec temperature_range = arma::linspace(0.05, 5, 101);
 
   for (uint64_t iT = 0; iT < temperature_range.n_rows; ++iT) {
     auto runner = mch::MonteCarloRunner(square_hamiltonian);
@@ -31,7 +31,7 @@ int main() {
       runner.cluster_update(T);
 
       if (i > PROD_START) {
-        stats.row(i - PROD_START) = {runner.energy(), arma::sum(runner.spins())};
+        stats.row(i - PROD_START) = {runner.energy(), fabs(arma::sum(runner.spins()))};
       }
     }
 
