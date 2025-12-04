@@ -10,24 +10,36 @@
 
 namespace mch::app {
 
+/// Type of update at each MC step
+enum MCStepType {
+  /// Sweep through all spins and update one by one
+  Sweep,
+
+  /// Cluster update
+  Cluster
+};
+
 struct Parameters {
   /// Size of the supercell
-  std::array<uint64_t, 3> supercell_size = {10, 10, 1};
+  std::array<uint64_t, 3> supercell_size = {1, 1, 1};
 
   /// Magnetic sites
-  std::vector<std::string> magnetic_sites = {"H"};
+  std::vector<std::string> magnetic_sites;
 
   /// Pair definitions
-  std::vector<mch::jpairdef_t> pair_defs = {{"H", "H", 2.0, 1.0}};
+  std::vector<mch::jpairdef_t> pair_defs;
 
   /// Temperature
-  double T = 3.0;
+  double T = 0.1;
 
   /// Magnetic field
   double H = 0.0;
 
   /// Number of steps
-  uint64_t N = 20000;
+  uint64_t N = 1000;
+
+  /// Type of update
+  MCStepType step_type;
 
   /// Update using TOML
   void update(toml::table& input);
