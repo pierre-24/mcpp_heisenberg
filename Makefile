@@ -1,4 +1,4 @@
-DIRS = ./src ./include ./tests
+DIRS = ./lib ./include ./tests ./app
 
 lint:
 	 cpplint --quiet --recursive $(DIRS)

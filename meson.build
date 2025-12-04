@@ -21,7 +21,9 @@ if git_program.found()
     build_args += '-DPROJECT_BUILD_COMMIT="' + run_command(git_program, 'rev-parse', 'HEAD').stdout().substring(0, 7) + '"'
 endif
 
-subdir('src')
+subdir('lib')
+
+subdir('app')
 
 # -- TESTS
 if get_option('tests')

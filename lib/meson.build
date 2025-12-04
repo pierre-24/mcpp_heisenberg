@@ -65,13 +65,3 @@ lmcpp_heisenberg_dep = declare_dependency(
     include_directories: includes,
     dependencies: lib_deps
 )
-
-# -- EXECUTABLE
-mcpp_heisenberg = executable(
-    meson.project_name() + '_run',
-    lib_srcs + 'main.cpp',
-    include_directories : includes,
-    dependencies: lib_deps + lmcpp_heisenberg_dep,
-    cpp_args : build_args,
-    install : true
-)
