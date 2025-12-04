@@ -101,7 +101,7 @@ TEST_F(MCTestsSuite, TestSquareSave) {
     dset_energy.read_raw(energies.memptr());
 
     auto dset_configs = group.getDataSet("configs");
-    arma::mat configs(square_hamiltonian.N(), MAX + 1);
+    arma::mat configs(square_hamiltonian.number_of_magnetic_sites(), MAX + 1);
     dset_configs.read_raw(configs.memptr());
 
     EXPECT_TRUE(arma::approx_equal(stats.col(0), energies.subvec(1, MAX), "abstol", 1e-5));

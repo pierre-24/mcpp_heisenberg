@@ -13,7 +13,7 @@ void IsingMonteCarloRunner::sweep(double T, double H) {
 
   std::uniform_real_distribution<> dis(.0, 1.);
 
-  for (uint64_t ispin = 0; ispin < _hamiltonian.N(); ++ispin) {
+  for (uint64_t ispin = 0; ispin < _hamiltonian.number_of_magnetic_sites(); ++ispin) {
     double dE = _hamiltonian.delta_energy(_spins, ispin);
 
     if ((dE < 0) || (dis(_rng) < exp(-dE / T))) {
@@ -29,7 +29,7 @@ void IsingMonteCarloRunner::cluster_update(double T, double H) {
   assert(T > 0);
 
   // pick a spin
-  uint64_t i = std::uniform_int_distribution<>(0, _hamiltonian.N() - 1)(_rng);
+  uint64_t i = std::uniform_int_distribution<>(0, _hamiltonian.number_of_magnetic_sites() - 1)(_rng);
 
   // select cluster
   std::uniform_real_distribution<> dis(.0, 1.);
@@ -69,11 +69,11 @@ void IsingMonteCarloRunner::cluster_update(double T, double H) {
 void IsingMonteCarloRunner::save(HighFive::Group& group) {
   LOGD << "Save MC";
 
-  std::vector<uint64_t> info = {_hamiltonian.N(), _frames.size()};
+  std::vector<uint64_t> info = {_hamiltonian.number_of_magnetic_sites(), _frames.size()};
   group.createDataSet<uint64_t>("info", HighFive::DataSpace::From(info)).write(info);
 
   arma::vec energies(_frames.size());
-  arma::mat configs(_hamiltonian.N(), _frames.size());  // HDF5 is row major
+  arma::mat configs(_hamiltonian.number_of_magnetic_sites(), _frames.size());  // HDF5 is row major
 
   uint64_t i = 0;
   for (auto& frame : _frames) {
@@ -82,7 +82,8 @@ void IsingMonteCarloRunner::save(HighFive::Group& group) {
     i++;
   }
 
-  auto dset_configs = group.createDataSet<double>("configs", HighFive::DataSpace({ _frames.size(), _hamiltonian.N()}));
+  auto dset_configs = group.createDataSet<double>(
+      "configs", HighFive::DataSpace({ _frames.size(), _hamiltonian.number_of_magnetic_sites()}));
   dset_configs.write_raw(configs.memptr());
 
   auto dset_energies = group.createDataSet<double>("energies", HighFive::DataSpace({energies.n_rows}));

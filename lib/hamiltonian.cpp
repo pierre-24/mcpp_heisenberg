@@ -8,7 +8,7 @@
 namespace mch {
 
 double IsingHamiltonian::energy(const arma::vec &spins) const {
-  assert(spins.n_rows == _N);
+  assert(spins.n_rows == _n_magnetic_sites);
 
   double energy = .0;
 
@@ -72,7 +72,7 @@ IsingHamiltonian IsingHamiltonian::from_geometry(const Geometry& geometry, std::
 }
 
 double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i) const {
-  assert(i < _N);
+  assert(i < _n_magnetic_sites);
 
   double dE = .0;
 

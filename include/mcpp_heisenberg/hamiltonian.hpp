@@ -53,7 +53,7 @@ using neighborlist_t = std::set<std::pair<uint64_t, double>>;
 class IsingHamiltonian {
  protected:
   /// Number of magnetic site/spins
-  uint64_t _N{0};
+  uint64_t _n_magnetic_sites{0};
   /// (unique) interaction pairs
   std::vector<jpair_t> _pairs;
   /// Neighbour list
@@ -63,8 +63,8 @@ class IsingHamiltonian {
   IsingHamiltonian() = default;
 
   /// Create an Heisenberg hamiltonian, with `N` sites and `pairs` pair interactions
-  IsingHamiltonian(uint64_t N, const std::vector<jpair_t>& pairs): _N{N}, _pairs(pairs) {
-    // build the neighbors list
+  IsingHamiltonian(uint64_t N, const std::vector<jpair_t>& pairs): _n_magnetic_sites{N}, _pairs(pairs) {
+    // build the neighbor list
     for (auto& pair : _pairs) {
       if (!_neighbor_list.contains(pair.first.first)) {
         _neighbor_list[pair.first.first] = neighborlist_t();
@@ -81,7 +81,10 @@ class IsingHamiltonian {
   }
 
   /// Get number of sites
-  uint64_t N() const { return _N; }
+  [[nodiscard]] uint64_t number_of_magnetic_sites() const { return _n_magnetic_sites; }
+
+  /// Get number of pairs
+  [[nodiscard]] uint64_t number_of_pairs() const { return _pairs.size(); }
 
   /// Compute the energy
   [[nodiscard]] double energy(const arma::vec& spins) const;
@@ -90,11 +93,11 @@ class IsingHamiltonian {
   [[nodiscard]] double delta_energy(const arma::vec& spins, uint64_t i) const;
 
   /// Get neighbors of i, a list of `(k, J_ik)`, where `k` is the index of the neighbor and `J_ik` is
-  /// The coupling strength.
-  neighborlist_t neighbors(uint64_t i) {
-    assert(i < _N);
+  /// the coupling strength between these two.
+  [[nodiscard]] neighborlist_t neighbors(uint64_t i) const {
+    assert(i < _n_magnetic_sites);
 
-    return _neighbor_list[i];
+    return _neighbor_list.at(i);
   }
 
   /// Create IsingHamiltonian from a geometry

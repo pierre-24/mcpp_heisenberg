@@ -30,14 +30,14 @@ class IsingMonteCarloRunner {
 
  public:
   explicit IsingMonteCarloRunner(const IsingHamiltonian& hamiltonian): _hamiltonian{hamiltonian} {
-    _spins.resize(hamiltonian.N());
+    _spins.resize(hamiltonian.number_of_magnetic_sites());
 
     // initialize random generator
     std::random_device rd;
     _rng = std::mt19937(rd());
 
     // choose a random configuration
-    auto spins = arma::vec(hamiltonian.N(), arma::fill::randu);
+    auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::randu);
     spins.for_each([](double& e) { e = e >= .5 ? 1.0 : -1.0; });
     set_spins(spins);
   }
@@ -47,7 +47,7 @@ class IsingMonteCarloRunner {
 
   /// Set spin configuration
   void set_spins(const arma::vec& config) {
-    assert(config.n_rows == _hamiltonian.N());
+    assert(config.n_rows == _hamiltonian.number_of_magnetic_sites());
     _spins = config;
     _energy = _hamiltonian.energy(_spins);
 
@@ -56,9 +56,6 @@ class IsingMonteCarloRunner {
 
   /// Get current energy
   [[nodiscard]] double energy() const { return _energy; }
-
-  /// Get number of magnetic sites
-  [[nodiscard]] uint64_t N() { return _hamiltonian.N(); }
 
   /// Sweep over all spins (at a given temperature `T` and a given magnetic field `H`) and switch them if any
   void sweep(double T, double H = .0);

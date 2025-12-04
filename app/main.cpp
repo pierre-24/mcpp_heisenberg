@@ -57,9 +57,12 @@ int main(int argc, char** argv) {
 
   std::cout << "*!> Done running!\n";
 
-  std::cout << "<E> = " << mean_energy / static_cast<double>(simulation_parameters.N * simulation.runner.N()) << ", "
-            << "<|m|> = " << mean_magnetization / static_cast<double>(simulation_parameters.N * simulation.runner.N())
-            << "\n";
+  // Statistics
+  auto dN = static_cast<double>(simulation_parameters.N * simulation.hamiltonian.number_of_magnetic_sites());
+
+  std::cout << "*> Statistics (N=" << simulation.hamiltonian.number_of_magnetic_sites() << ") :: "
+            << "<E>/N = " << mean_energy / dN << ", "
+            << "<|m|>/N = " << mean_magnetization / dN << "\n";
 
   // Save
   std::cout << "*!> Saving results\n";

@@ -18,9 +18,10 @@ TEST_F(HamiltonianTestsSuite, TestLinear) {
       {{2, 3}, 1.},
   });
 
-  auto spins = arma::vec(hamiltonian.N(), arma::fill::ones);
+  auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::ones);
 
-  EXPECT_NEAR(hamiltonian.energy(spins), -1.0 * hamiltonian.N(), 1e-5);  // 2 interactions per site
+  EXPECT_NEAR(hamiltonian.energy(spins), -1.0 * hamiltonian.number_of_magnetic_sites(), 1e-5);
+  // 2 interactions per site
 }
 
 /// Test chain (1D Ising)
@@ -36,10 +37,10 @@ TEST_F(HamiltonianTestsSuite, TestChain) {
 
   auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
 
-  EXPECT_EQ(hamiltonian.N(), 4);
+  EXPECT_EQ(hamiltonian.number_of_magnetic_sites(), 4);
 
-  auto spins = arma::vec(hamiltonian.N(), arma::fill::ones);
-  EXPECT_NEAR(hamiltonian.energy(spins), -1.0 * hamiltonian.N(), 1e-5);
+  auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::ones);
+  EXPECT_NEAR(hamiltonian.energy(spins), -1.0 * hamiltonian.number_of_magnetic_sites(), 1e-5);
 }
 
 /// Test square lattice (2D Ising)
@@ -55,10 +56,11 @@ TEST_F(HamiltonianTestsSuite, TestSquare) {
 
   auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
 
-  EXPECT_EQ(hamiltonian.N(), 16);
+  EXPECT_EQ(hamiltonian.number_of_magnetic_sites(), 16);
 
-  auto spins = arma::vec(hamiltonian.N(), arma::fill::ones);
-  EXPECT_NEAR(hamiltonian.energy(spins), -2.0 * hamiltonian.N(), 1e-5);  // 4 interactions per site
+  auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::ones);
+  EXPECT_NEAR(hamiltonian.energy(spins), -2.0 * hamiltonian.number_of_magnetic_sites(), 1e-5);
+  // 4 interactions per site
 }
 
 /// Test cube lattice (3D Ising), with selection of magnetic sites
@@ -77,10 +79,11 @@ TEST_F(HamiltonianTestsSuite, TestCubic) {
 
   auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
 
-  EXPECT_EQ(hamiltonian.N(), 64);
+  EXPECT_EQ(hamiltonian.number_of_magnetic_sites(), 64);
 
-  auto spins = arma::vec(hamiltonian.N(), arma::fill::ones);
-  EXPECT_NEAR(hamiltonian.energy(spins), -3.0 * hamiltonian.N(), 1e-5);  // 6 interactions per site
+  auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::ones);
+  EXPECT_NEAR(hamiltonian.energy(spins), -3.0 * hamiltonian.number_of_magnetic_sites(), 1e-5);
+  // 6 interactions per site
 }
 
 /// Test ΔE due to flippling one spin
@@ -97,7 +100,7 @@ TEST_F(HamiltonianTestsSuite, TestSquareDeltaE) {
   auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
 
   for (int i = 0; i < 50; ++i) {
-    auto spins = arma::vec(hamiltonian.N(), arma::fill::randu);
+    auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::randu);
     spins.for_each([](double& e) { e = e > .5 ? 1.0 : -1.0; });
 
     double Eb = hamiltonian.energy(spins);
