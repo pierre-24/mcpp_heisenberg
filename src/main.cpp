@@ -16,12 +16,12 @@ int main() {
   arma::mat positions = arma::mat(1, 3);
 
   auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(N, N, 1);
-  auto square_hamiltonian = mch::Hamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
+  auto square_hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
 
   arma::vec temperature_range = arma::linspace(0.05, 5, 101);
 
   for (uint64_t iT = 0; iT < temperature_range.n_rows; ++iT) {
-    auto runner = mch::MonteCarloRunner(square_hamiltonian);
+    auto runner = mch::IsingMonteCarloRunner(square_hamiltonian);
 
     double T = temperature_range.at(iT);
 

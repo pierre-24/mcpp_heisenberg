@@ -11,10 +11,10 @@
 
 namespace mch {
 
-class MonteCarloRunner {
+class IsingMonteCarloRunner {
  protected:
-  /// Hamiltonian
-  Hamiltonian _hamiltonian;
+  /// IsingHamiltonian
+  IsingHamiltonian _hamiltonian;
   /// Spin configuration
   arma::vec _spins;
   /// energy associated to `_spin`
@@ -29,7 +29,7 @@ class MonteCarloRunner {
   void _save_to_frame() { _frames.push_back(std::make_pair(_energy, _spins)); }
 
  public:
-  explicit MonteCarloRunner(const Hamiltonian& hamiltonian): _hamiltonian{hamiltonian} {
+  explicit IsingMonteCarloRunner(const IsingHamiltonian& hamiltonian): _hamiltonian{hamiltonian} {
     _spins.resize(hamiltonian.N());
 
     // initialize random generator

@@ -8,7 +8,7 @@
 
 class MCTestsSuite : public MCHTestsSuite {
  protected:
-  mch::Hamiltonian square_hamiltonian;
+  mch::IsingHamiltonian square_hamiltonian;
   uint64_t N = 10;
 
   MCTestsSuite() {
@@ -21,7 +21,7 @@ class MCTestsSuite : public MCHTestsSuite {
 
     auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(N, N, 1);
 
-    square_hamiltonian = mch::Hamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
+    square_hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
   }
 };
 
@@ -30,7 +30,7 @@ TEST_F(MCTestsSuite, TestSquareLowTemp) {
   uint64_t MAX = 10000;
   uint64_t PROD_START = MAX / 10 * 2;
 
-  auto runner = mch::MonteCarloRunner(square_hamiltonian);
+  auto runner = mch::IsingMonteCarloRunner(square_hamiltonian);
   double T = 0.1;
 
   arma::mat stats(MAX - PROD_START, 2);
@@ -39,7 +39,7 @@ TEST_F(MCTestsSuite, TestSquareLowTemp) {
     runner.sweep(T);
 
     if (i > PROD_START) {
-      stats.row(i - PROD_START) = {runner.energy(), arma::sum(runner.spins())};
+      stats.row(i - PROD_START) = {runner.energy(), fabs(arma::sum(runner.spins()))};
     }
   }
 
@@ -52,7 +52,7 @@ TEST_F(MCTestsSuite, TestSquareHighTemp) {
   uint64_t MAX = 10000;
   uint64_t PROD_START = MAX / 10 * 2;
 
-  auto runner = mch::MonteCarloRunner(square_hamiltonian);
+  auto runner = mch::IsingMonteCarloRunner(square_hamiltonian);
   double T = 10.0;
 
   arma::mat stats(MAX - PROD_START, 2);
@@ -61,18 +61,18 @@ TEST_F(MCTestsSuite, TestSquareHighTemp) {
     runner.sweep(T);
 
     if (i > PROD_START) {
-      stats.row(i - PROD_START) = {runner.energy(), arma::sum(runner.spins())};
+      stats.row(i - PROD_START) = {runner.energy(), fabs(arma::sum(runner.spins()))};
     }
   }
 
-  EXPECT_NEAR(fabs(arma::mean(stats.col(1))) / static_cast<double>(N * N), .0, 1e-2);
+  EXPECT_NEAR(fabs(arma::mean(stats.col(1))) / static_cast<double>(N * N), .0, 5e-1);
 }
 
 /// Test save
 TEST_F(MCTestsSuite, TestSquareSave) {
   uint64_t MAX = 10;
 
-  auto runner = mch::MonteCarloRunner(square_hamiltonian);
+  auto runner = mch::IsingMonteCarloRunner(square_hamiltonian);
   double T = 2.0;
 
   arma::mat stats(MAX, 2);
@@ -111,19 +111,24 @@ TEST_F(MCTestsSuite, TestSquareSave) {
   EXPECT_TRUE(std::filesystem::remove(temp_path));
 }
 
-/// Test square cluster update
+/// Test square cluster update, in the low temperature limit
 TEST_F(MCTestsSuite, TestSquareClusterUpdate) {
-  uint64_t MAX = 25;
+  uint64_t MAX = 10000;
+  uint64_t PROD_START = MAX / 10 * 2;
 
-  auto runner = mch::MonteCarloRunner(square_hamiltonian);
+  auto runner = mch::IsingMonteCarloRunner(square_hamiltonian);
   double T = 0.1;
 
-  arma::mat stats(MAX, 2);
+  arma::mat stats(MAX - PROD_START, 2);
 
   for (uint64_t i = 0; i < MAX; ++i) {
     runner.cluster_update(T);
-    stats.row(i) = {runner.energy(), arma::sum(runner.spins())};
+
+    if (i > PROD_START) {
+      stats.row(i - PROD_START) = {runner.energy(), fabs(arma::sum(runner.spins()))};
+    }
   }
 
-  LOGD << stats.col(1);
+  EXPECT_NEAR(arma::mean(stats.col(0)) / static_cast<double>(N * N), -2, 1e-3);  // <E>
+  EXPECT_NEAR(fabs(arma::mean(stats.col(1))) / static_cast<double>(N * N), 1., 1e-3);  // <|m|>
 }

@@ -6,7 +6,7 @@
 
 namespace mch {
 
-void MonteCarloRunner::sweep(double T, double H) {
+void IsingMonteCarloRunner::sweep(double T, double H) {
   assert(T > 0);
 
   LOGV << "Sweep at T=" << T << ", H=" << H;
@@ -25,7 +25,7 @@ void MonteCarloRunner::sweep(double T, double H) {
   _save_to_frame();
 }
 
-void MonteCarloRunner::cluster_update(double T, double H) {
+void IsingMonteCarloRunner::cluster_update(double T, double H) {
   assert(T > 0);
 
   // pick a spin
@@ -44,7 +44,7 @@ void MonteCarloRunner::cluster_update(double T, double H) {
     uint64_t j = newly_added.front();
     newly_added.pop();
 
-    for (auto& neighbor : _hamiltonian.neighbor(j)) {
+    for (auto& neighbor : _hamiltonian.neighbors(j)) {
       uint64_t k = neighbor.first;
       if (!cluster.contains(k)
           && (_spins.at(j) == _spins.at(k))
@@ -66,7 +66,7 @@ void MonteCarloRunner::cluster_update(double T, double H) {
   _save_to_frame();
 }
 
-void MonteCarloRunner::save(HighFive::Group& group) {
+void IsingMonteCarloRunner::save(HighFive::Group& group) {
   LOGD << "Save MC";
 
   std::vector<uint64_t> info = {_hamiltonian.N(), _frames.size()};

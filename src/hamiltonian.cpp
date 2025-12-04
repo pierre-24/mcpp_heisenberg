@@ -7,7 +7,7 @@
 
 namespace mch {
 
-double Hamiltonian::energy(const arma::vec &spins) const {
+double IsingHamiltonian::energy(const arma::vec &spins) const {
   assert(spins.n_rows == _N);
 
   double energy = .0;
@@ -19,7 +19,7 @@ double Hamiltonian::energy(const arma::vec &spins) const {
   return -1. * energy;  // assume unique pairs
 }
 
-Hamiltonian Hamiltonian::from_geometry(
+IsingHamiltonian IsingHamiltonian::from_geometry(
 const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::vector<jpairdef_t> pair_defs) {
   // prepare geometry
   auto& positions = geometry.positions();
@@ -80,7 +80,7 @@ const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::v
   return {N, pairs};
 }
 
-double Hamiltonian::delta_energy(const arma::vec& spins, uint64_t i) const {
+double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i) const {
   assert(i < _N);
 
   double dE = .0;
