@@ -25,9 +25,6 @@ class IsingMonteCarloRunner {
   /// Frames
   std::vector<std::pair<double, arma::vec>> _frames;
 
-  /// Save current config in frame
-  void _save_to_frame() { _frames.push_back(std::make_pair(_energy, _spins)); }
-
  public:
   explicit IsingMonteCarloRunner(const IsingHamiltonian& hamiltonian): _hamiltonian{hamiltonian} {
     _spins.resize(hamiltonian.number_of_magnetic_sites());
@@ -50,8 +47,6 @@ class IsingMonteCarloRunner {
     assert(config.n_rows == _hamiltonian.number_of_magnetic_sites());
     _spins = config;
     _energy = _hamiltonian.energy(_spins);
-
-    _save_to_frame();
   }
 
   /// Get current energy
@@ -61,10 +56,7 @@ class IsingMonteCarloRunner {
   void sweep(double T, double H = .0);
 
   /// do a cluster update
-  void cluster_update(double T, double H = .0);
-
-  /// Save results in `group`
-  void save(HighFive::Group& group);
+  uint64_t cluster_update(double T, double H = .0);
 };
 
 }  // namespace mch

@@ -81,6 +81,7 @@ void Parameters::update(toml::table& input) {
   T = input["T"].value_or(T);
   H = input["H"].value_or(H);
   N = input["N"].value_or(N);
+  save_interval = input["save_interval"].value_or(save_interval);
 
   auto st_node = input["step_type"];
   if (!!st_node) {
@@ -118,7 +119,8 @@ void Parameters::print(std::ostream& stream) const {
          << "T = " << T << "\n"
          << "H = " << H << "\n"
          << "N = " << N << "\n"
-         << "step_type = '" << (step_type == Sweep ? "sweep" : "cluster") << "'\n";
+         << "step_type = '" << (step_type == Sweep ? "sweep" : "cluster") << "'\n"
+         << "save_interval = " << save_interval << "\n";
 }
 
 void set_log_level(plog::Severity default_) {
@@ -194,6 +196,12 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
       .hamiltonian = hamiltonian,
       .runner = mch::IsingMonteCarloRunner(hamiltonian)
   };
+}
+
+void save_simulation(HighFive::File& file, const Parameters& parameters, const Simulation& simulation) {
+  auto geometry_group = file.createGroup("geometry");
+
+  auto hamiltonian_group = file.createGroup("hamiltonian");
 }
 
 }  // namespace mch::app

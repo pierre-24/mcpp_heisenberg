@@ -39,7 +39,10 @@ struct Parameters {
   uint64_t N = 1000;
 
   /// Type of update
-  MCStepType step_type;
+  MCStepType step_type = Sweep;
+
+  /// Save interval
+  uint64_t save_interval = 1000;
 
   /// Update using TOML
   void update(toml::table& input);
@@ -62,6 +65,9 @@ void read_toml_input(const std::string& input_file, Parameters& parameters);
 
 /// Prepare simulation
 Simulation prepare_simulation(const Parameters& parameters, const std::string& geometry_file);
+
+/// Save simulation to H5
+void save_simulation(HighFive::File& file, const Parameters& parameters, const Simulation& simulation);
 
 }  // namespace mch::app
 

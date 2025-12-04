@@ -45,4 +45,6 @@ T = 0.1  # Temperature
 H = 0   # magnetic field (not implemented yet)
 N = 20000  # number of MC steps
 step_type = 'sweep'  # either 'sweep' (update sites one by ones) or 'cluster' (switch whole cluster) 
+
+save_interval = 1000 # frame buffer, requires `save_interval*n_mag_sites*sizeof(double)` of memory
 ```
