@@ -21,7 +21,7 @@ class MCTestsSuite : public MCHTestsSuite {
 
     auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(N, N, 1);
 
-    square_hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
+    square_hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
   }
 };
 

@@ -111,3 +111,16 @@ TEST_F(GeometryTestsSuite, TestMakeSupercell) {
   EXPECT_TRUE(arma::approx_equal(supercell_raw.positions().row(4), supercell.positions().row(2), "abstol", 1e-5));
   EXPECT_TRUE(arma::approx_equal(supercell_raw.positions().row(6), supercell.positions().row(3), "abstol", 1e-5));
 }
+
+TEST_F(GeometryTestsSuite, TestFilter) {
+  auto ss = std::make_shared<std::stringstream>();
+
+  (*ss) << MgO_frac;
+  ss->seekg(0);
+
+  auto geometry = mch::Geometry::from_poscar(ss);
+
+  auto only_Mg = geometry.filter_atoms({"Mg"});
+  EXPECT_EQ(only_Mg.ions().size(), 1);
+  EXPECT_EQ(only_Mg.ions().at(0).first, "Mg");
+}

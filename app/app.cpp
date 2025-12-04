@@ -72,13 +72,17 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
   std::cout << "*!> Geometry is::\n```\n" << geometry.to_poscar() << "```\n";
 
   // Make supercell
-  std::cout << "*!> Make supercell\n";
-  auto supercell = geometry.to_supercell(
-      parameters.supercell_size[0], parameters.supercell_size[1], parameters.supercell_size[2]);
+  std::cout << "*!> Make system\n";
+  auto supercell =
+      geometry
+          .filter_atoms(parameters.magnetic_sites)
+          .to_supercell(parameters.supercell_size[0], parameters.supercell_size[1], parameters.supercell_size[2]);
+
+  std::cout << "*!> Geometry of the system is::\n```\n" << supercell.to_poscar() << "```\n";
 
   // Prepare hamiltonian
   std::cout << "*!> Make Hamiltonian\n";
-  auto hamiltonian = mch::IsingHamiltonian::from_geometry(supercell, parameters.magnetic_sites, parameters.pair_defs);
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(supercell, parameters.pair_defs);
 
   // Make runner
   std::cout << "*!> Make runner\n";

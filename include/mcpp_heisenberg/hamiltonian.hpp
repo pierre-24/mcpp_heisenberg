@@ -98,8 +98,7 @@ class IsingHamiltonian {
   }
 
   /// Create IsingHamiltonian from a geometry
-  static IsingHamiltonian from_geometry(
-      const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::vector<jpairdef_t> pair_defs);
+  static IsingHamiltonian from_geometry(const Geometry& geometry, std::vector<jpairdef_t> pair_defs);
 };
 
 }  // namespace mch

@@ -260,5 +260,39 @@ mch::Geometry mch::Geometry::to_supercell(uint64_t nx, uint64_t ny, uint64_t nz,
     positions = sorted_positions;
   }
 
-  return Geometry(_title, lattice, ions, positions);
+  return {_title, lattice, ions, positions};
+}
+
+mch::Geometry mch::Geometry::filter_atoms(const std::vector<std::string>& atoms) const {
+  LOGD << "Filter atoms: " << atoms;
+
+  // count
+  uint64_t N = 0;
+
+  for (auto& it : _ions) {
+    for (auto& jt : atoms) {
+      if (it.first == jt) {
+        N += it.second;
+      }
+    }
+  }
+
+  // filter
+  auto positions = arma::mat(N, 3);
+  auto ions = std::vector<ion_type_t>();
+
+  uint64_t ni = 0, nj = 0;
+  for (auto& it : _ions) {
+    for (auto& jt : atoms) {
+      if (it.first == jt) {
+        ions.push_back(it);
+        positions.rows(ni, ni + it.second - 1) = _positions.rows(nj, nj + it.second - 1);
+        ni += it.second;
+      }
+
+      nj += it.second;
+    }
+  }
+
+  return {_title, _lattice_vectors, ions, positions};
 }

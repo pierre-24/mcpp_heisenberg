@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include <mcpp_heisenberg/mc.hpp>
+#include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 
 #include <toml++/toml.hpp>
 

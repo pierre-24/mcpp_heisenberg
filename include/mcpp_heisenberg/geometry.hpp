@@ -19,7 +19,7 @@ namespace mch {
  */
 class WordLexer {
  protected:
-  char _c;
+  int _c{0};
   uint64_t _line{0};
   std::shared_ptr<std::istream> _stream;
 
@@ -37,7 +37,7 @@ class WordLexer {
   }
 
   /// Get current line
-  uint64_t line() { return _line; }
+  [[nodiscard]] uint64_t line() const { return _line; }
 
   /// Get next word, `\n` or `\0`.
   std::string next_word() {
@@ -122,16 +122,16 @@ class Geometry {
   }
 
   /// Get number of atoms
-  uint64_t number_of_atoms() const { return _positions.n_rows; }
+  [[nodiscard]] uint64_t number_of_atoms() const { return _positions.n_rows; }
 
   /// Get lattice
-  const arma::mat& lattice() const { return _lattice_vectors; }
+  [[nodiscard]] const arma::mat& lattice() const { return _lattice_vectors; }
 
   /// Get ions
-  const std::vector<ion_type_t>& ions() const { return _ions; }
+  [[nodiscard]] const std::vector<ion_type_t>& ions() const { return _ions; }
 
   /// Get positions (fractional coordinates)
-  const arma::mat& positions() const { return _positions; }
+  [[nodiscard]] const arma::mat& positions() const { return _positions; }
 
   /// format as a POSCAR file
   [[nodiscard]] std::string to_poscar() const;
@@ -140,7 +140,7 @@ class Geometry {
   static Geometry from_poscar(std::shared_ptr<std::istream> istream);
 
   /// Get a, b, c
-  arma::vec get_abc() const {
+  [[nodiscard]] arma::vec get_abc() const {
     arma::vec abc(3);
     for (uint64_t i = 0; i < 3; ++i) {
       abc.at(i) = arma::norm(_lattice_vectors.row(i));
@@ -150,7 +150,7 @@ class Geometry {
   }
 
   /// Get alpha beta gamma
-  arma::vec get_alpha_beta_gamma() const {
+  [[nodiscard]] arma::vec get_alpha_beta_gamma() const {
     arma::vec abg(3);
 
     auto angle_between = [](arma::rowvec v1, arma::rowvec v2) {
@@ -168,7 +168,10 @@ class Geometry {
   }
 
   /// Create a `nx` x `ny` x `nz` supercell.
-  mch::Geometry to_supercell(uint64_t nx, uint64_t ny, uint64_t nz, bool sort = true) const;
+  [[nodiscard]] Geometry to_supercell(uint64_t nx, uint64_t ny, uint64_t nz, bool sort = true) const;
+
+  /// Get a new geometry, but only with the atoms in `atoms`
+  [[nodiscard]] Geometry filter_atoms(const std::vector<std::string>& atoms) const;
 };
 
 }  // namespace mch

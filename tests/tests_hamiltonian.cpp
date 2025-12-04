@@ -34,7 +34,7 @@ TEST_F(HamiltonianTestsSuite, TestChain) {
 
   auto geometry = mch::Geometry("chain", lattice, {{"H", 1}}, positions).to_supercell(4, 1, 1);
 
-  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
 
   EXPECT_EQ(hamiltonian.N(), 4);
 
@@ -53,7 +53,7 @@ TEST_F(HamiltonianTestsSuite, TestSquare) {
 
   auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(4, 4, 1);
 
-  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
 
   EXPECT_EQ(hamiltonian.N(), 16);
 
@@ -71,9 +71,11 @@ TEST_F(HamiltonianTestsSuite, TestCubic) {
   arma::mat positions = arma::mat(2, 3);
   positions.row(1) += 0.5;
 
-  auto geometry = mch::Geometry("cube", lattice, {{"H", 1}, {"X", 1}}, positions).to_supercell(4, 4, 4);
+  auto geometry = mch::Geometry("cube", lattice, {{"H", 1}, {"X", 1}}, positions)
+                      .filter_atoms({"H"})
+                      .to_supercell(4, 4, 4);
 
-  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
 
   EXPECT_EQ(hamiltonian.N(), 64);
 
@@ -92,7 +94,7 @@ TEST_F(HamiltonianTestsSuite, TestSquareDeltaE) {
 
   auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(4, 4, 1);
 
-  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {"H"}, {{"H", "H", 2.0, 1.0}});
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
 
   for (int i = 0; i < 50; ++i) {
     auto spins = arma::vec(hamiltonian.N(), arma::fill::randu);

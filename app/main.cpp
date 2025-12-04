@@ -4,11 +4,15 @@
 
 #include <CLI/CLI.hpp>
 
-#include <mcpp_heisenberg/mc.hpp>
+#include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 
 #include "app.h"
 
 int main(int argc, char** argv) {
+  std::cout << "*!> Welcome, this is "
+            << PROJECT_NAME
+            << " (" << PROJECT_VERSION << " @ " << PROJECT_BUILD_COMMIT << ", built" << PROJECT_BUILD_DATE << ")\n";
+
   // read CLI
   CLI::App app;
 
@@ -40,6 +44,7 @@ int main(int argc, char** argv) {
   auto simulation = mch::app::prepare_simulation(simulation_parameters, geometry_file);
 
   // Run simulation
+  std::cout << "*!> Run for " << simulation_parameters.N << " steps\n";
   double mean_energy = .0;
   double mean_magnetization = .0;
 
@@ -50,17 +55,22 @@ int main(int argc, char** argv) {
     mean_magnetization += fabs(arma::sum(simulation.runner.spins()));
   }
 
+  std::cout << "*!> Done running!\n";
+
   std::cout << "<E> = " << mean_energy / static_cast<double>(simulation_parameters.N * simulation.runner.N()) << ", "
             << "<|m|> = " << mean_magnetization / static_cast<double>(simulation_parameters.N * simulation.runner.N())
             << "\n";
 
   // Save
+  std::cout << "*!> Saving results\n";
   {
     HighFive::File file(output_file, HighFive::File::ReadWrite | HighFive::File::Create | HighFive::File::Truncate);
 
     auto group = file.createGroup("results");
     simulation.runner.save(group);
   }
+
+  std::cout << "*!> Goodbye =)\n";
 
   return EXIT_SUCCESS;
 }

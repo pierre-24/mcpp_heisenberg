@@ -19,28 +19,19 @@ double IsingHamiltonian::energy(const arma::vec &spins) const {
   return -1. * energy;  // assume unique pairs
 }
 
-IsingHamiltonian IsingHamiltonian::from_geometry(
-const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::vector<jpairdef_t> pair_defs) {
+IsingHamiltonian IsingHamiltonian::from_geometry(const Geometry& geometry, std::vector<jpairdef_t> pair_defs) {
   // prepare geometry
   auto& positions = geometry.positions();
-  auto ion_types = std::vector<std::string>();
-  uint64_t N = 0;
 
+  // list ion types
+  auto ion_types = std::vector<std::string>();
   for (auto& it : geometry.ions()) {
-    // list ion types
     for (uint64_t iatm = 0; iatm < it.second; ++iatm) {
       ion_types.push_back(it.first);
     }
-
-    // count number of magnetic site
-    for (auto& s : magnetic_sites) {
-      if (s == it.first) {
-        N += it.second;
-      }
-    }
   }
 
-  LOGD << "Got " << N << " magnetic sites";
+  LOGD << "Got " << geometry.number_of_atoms() << " magnetic sites";
   LOGD << "create pair list";
 
   std::vector<jpair_t> pairs;
@@ -77,7 +68,7 @@ const Geometry& geometry, const std::vector<std::string>& magnetic_sites, std::v
 
   LOGD << "Done with list, got " << pairs.size() << " pairs";
 
-  return {N, pairs};
+  return {geometry.number_of_atoms(), pairs};
 }
 
 double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i) const {
