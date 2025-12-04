@@ -67,7 +67,7 @@ void read_toml_input(const std::string& input_file, Parameters& parameters);
 Simulation prepare_simulation(const Parameters& parameters, const std::string& geometry_file);
 
 /// Save simulation to H5
-void save_simulation(HighFive::File& file, const Parameters& parameters, const Simulation& simulation);
+void save_simulation(HighFive::File& file, const Simulation& simulation);
 
 }  // namespace mch::app
 

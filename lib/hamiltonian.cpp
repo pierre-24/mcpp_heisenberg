@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <algorithm>
 
 namespace mch {
 
@@ -81,6 +82,24 @@ double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i) const 
   }
 
   return 2 * spins.at(i) * dE;
+}
+
+void IsingHamiltonian::to_h5_group(HighFive::Group& group) const {
+  // save pairs
+  std::vector<std::array<uint64_t, 2>> pairs(_pairs.size());
+  std::transform(
+      _pairs.cbegin(), _pairs.cend(), pairs.begin(),
+      [](auto& t) { return std::array<uint64_t, 2>({t.first.first, t.first.second}); });
+
+  auto dset_pairs = group.createDataSet("pairs", pairs);
+  dset_pairs.write(pairs);
+
+  // save J
+  std::vector<double> Js(_pairs.size());
+  std::transform(_pairs.cbegin(), _pairs.cend(), Js.begin(), [](auto& t) { return t.second; });
+
+  auto dset_Js = group.createDataSet("J", Js);
+  dset_Js.write(Js);
 }
 
 }  // namespace mch

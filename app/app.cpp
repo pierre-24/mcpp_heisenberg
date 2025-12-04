@@ -174,7 +174,7 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
   auto geometry = mch::Geometry::from_poscar(geometry_fs);
   geometry_fs->close();
 
-  std::cout << "*!> Geometry is::\n```\n" << geometry.to_poscar() << "```\n";
+  std::cout << "*!> Geometry of the unit cell is::\n```\n" << geometry.to_poscar() << "```\n";
 
   // Make supercell
   std::cout << "*!> Make system\n";
@@ -198,10 +198,12 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
   };
 }
 
-void save_simulation(HighFive::File& file, const Parameters& parameters, const Simulation& simulation) {
+void save_simulation(HighFive::File& file, const Simulation& simulation) {
   auto geometry_group = file.createGroup("geometry");
+  simulation.geometry.to_h5_group(geometry_group);
 
   auto hamiltonian_group = file.createGroup("hamiltonian");
+  simulation.hamiltonian.to_h5_group(hamiltonian_group);
 }
 
 }  // namespace mch::app

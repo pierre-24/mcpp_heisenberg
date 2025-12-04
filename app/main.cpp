@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
   // Prepare simulation
   auto simulation = mch::app::prepare_simulation(simulation_parameters, geometry_file);
 
-  mch::app::save_simulation(h5_file, simulation_parameters, simulation);
+  mch::app::save_simulation(h5_file, simulation);
 
   std::cout << "*!> Run for " << simulation_parameters.N << " steps\n";
 
@@ -55,6 +55,9 @@ int main(int argc, char** argv) {
   auto dset_energies = result_group.createDataSet<double>("energies", HighFive::DataSpace({simulation_parameters.N}));
   auto dset_configs = result_group.createDataSet<double>(
       "configs", HighFive::DataSpace({simulation_parameters.N, simulation.hamiltonian.number_of_magnetic_sites()}));
+
+  std::array<double, 2> info = {simulation_parameters.T, simulation_parameters.H};
+  result_group.createDataSet("T&H", info).write(info);
 
   arma::vec buffer_energies(simulation_parameters.save_interval);
   arma::mat buffer_configurations(

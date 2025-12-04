@@ -2,13 +2,14 @@
 #include <string>
 #include <vector>
 #include <utility>
-
-#include <fmt/format.h>
+#include <algorithm>
 
 #include <mcpp_heisenberg/logging.hpp>
 #include <mcpp_heisenberg/geometry.hpp>
 
-std::string mch::Geometry::to_poscar() const {
+namespace mch {
+
+std::string Geometry::to_poscar() const {
   std::stringstream ss;
 
   // title and multiplication factor
@@ -16,9 +17,8 @@ std::string mch::Geometry::to_poscar() const {
 
   // lattice
   for (uint64_t il = 0; il < 3; ++il) {
-    ss << fmt::format(
-        " {: .8f} {: .8f} {: .8f}\n",
-        _lattice_vectors.at(il, 0), _lattice_vectors.at(il, 1), _lattice_vectors.at(il, 2));
+    ss << fmt::format(" {: .8f} {: .8f} {: .8f}\n", _lattice_vectors.at(il, 0), _lattice_vectors.at(il, 1),
+                      _lattice_vectors.at(il, 2));
   }
 
   // ions
@@ -40,12 +40,8 @@ std::string mch::Geometry::to_poscar() const {
   uint64_t ni = 0;
   for (auto& it : _ions) {
     for (uint64_t ii = 0; ii < it.second; ++ii) {
-      ss << fmt::format(
-          " {: .8f} {: .8f} {: .8f} {}\n",
-          _positions.at(ni + ii, 0),
-          _positions.at(ni + ii, 1),
-          _positions.at(ni + ii, 2),
-          it.first);
+      ss << fmt::format(" {: .8f} {: .8f} {: .8f} {}\n", _positions.at(ni + ii, 0), _positions.at(ni + ii, 1),
+                        _positions.at(ni + ii, 2), it.first);
     }
 
     ni += it.second;
@@ -81,7 +77,7 @@ std::string _get_word(std::istream& istream) {
   return ss.str();
 }
 
-mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) {
+Geometry Geometry::from_poscar(std::shared_ptr<std::istream> istream) {
   LOGD << "start reading POSCAR";
 
   // read the first line as is
@@ -111,7 +107,7 @@ mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) 
 
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
-        lattice.at(i, j) = factor * lexer.next_double_or_throw();
+      lattice.at(i, j) = factor * lexer.next_double_or_throw();
     }
 
     lexer.skip_if(is_EOL, "expected EOL");
@@ -127,7 +123,7 @@ mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) 
     next_word = lexer.next_word();
   }
 
-  std::vector<mch::ion_type_t> ions;
+  std::vector<ion_type_t> ions;
   uint64_t natoms = 0;
   for (uint64_t in = 0; in < ion_types.size(); ++in) {
     ions.push_back(std::make_pair(ion_types[in], static_cast<uint64_t>(lexer.next_integer_or_throw())));
@@ -196,7 +192,7 @@ mch::Geometry mch::Geometry::from_poscar(std::shared_ptr<std::istream> istream) 
   return Geometry(title, lattice, ions, positions);
 }
 
-mch::Geometry mch::Geometry::to_supercell(uint64_t nx, uint64_t ny, uint64_t nz, bool sort) const {
+Geometry Geometry::to_supercell(uint64_t nx, uint64_t ny, uint64_t nz, bool sort) const {
   LOGD << "Make " << nx << "x" << ny << "x" << nz << " supercell";
 
   // make new positions and ions
@@ -263,7 +259,7 @@ mch::Geometry mch::Geometry::to_supercell(uint64_t nx, uint64_t ny, uint64_t nz,
   return {_title, lattice, ions, positions};
 }
 
-mch::Geometry mch::Geometry::filter_atoms(const std::vector<std::string>& atoms) const {
+Geometry Geometry::filter_atoms(const std::vector<std::string>& atoms) const {
   LOGD << "Filter atoms: " << atoms;
 
   // count
@@ -296,3 +292,26 @@ mch::Geometry mch::Geometry::filter_atoms(const std::vector<std::string>& atoms)
 
   return {_title, _lattice_vectors, ions, positions};
 }
+
+void Geometry::to_h5_group(HighFive::Group& group) const {
+  // Save ion number & types
+  std::vector<uint64_t> ion_numbers(_ions.size());
+  std::transform(_ions.cbegin(), _ions.cend(), ion_numbers.begin(), [](auto& t) { return t.second; });
+  auto dset_ion_numbers = group.createDataSet("ion_numbers", ion_numbers);
+  dset_ion_numbers.write(ion_numbers);
+
+  std::vector<std::string> ion_types(_ions.size());
+  std::transform(_ions.cbegin(), _ions.cend(), ion_types.begin(), [](auto& t) { return t.first; });
+  auto dset_ion_types = group.createDataSet("ion_types", ion_types);
+  dset_ion_types.write(ion_types);
+
+  // save lattice
+  auto dset_lattice = group.createDataSet<double>("lattice_vectors", HighFive::DataSpace({3, 3}));
+  dset_lattice.write_raw(_lattice_vectors.memptr());
+
+  // save positions
+  auto dset_positions = group.createDataSet<double>("positions", HighFive::DataSpace({3, _positions.n_rows}));
+  dset_positions.write_raw(_positions.memptr());
+}
+
+}  // namespace mch

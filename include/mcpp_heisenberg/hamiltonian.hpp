@@ -102,6 +102,9 @@ class IsingHamiltonian {
 
   /// Create IsingHamiltonian from a geometry
   static IsingHamiltonian from_geometry(const Geometry& geometry, std::vector<jpairdef_t> pair_defs);
+
+  /// Save in H5 group
+  void to_h5_group(HighFive::Group& group) const;
 };
 
 }  // namespace mch

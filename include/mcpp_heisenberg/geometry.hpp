@@ -8,6 +8,7 @@
 #include <memory>
 
 #include <fmt/format.h>
+#include <highfive/highfive.hpp>
 
 #include <mcpp_heisenberg/arma.hpp>
 #include <mcpp_heisenberg/logging.hpp>
@@ -172,6 +173,9 @@ class Geometry {
 
   /// Get a new geometry, but only with the atoms in `atoms`
   [[nodiscard]] Geometry filter_atoms(const std::vector<std::string>& atoms) const;
+
+  /// Save to group
+  void to_h5_group(HighFive::Group& group) const;
 };
 
 }  // namespace mch
