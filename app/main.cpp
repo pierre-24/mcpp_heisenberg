@@ -1,12 +1,38 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#include <vector>
 
 #include <CLI/CLI.hpp>
 
 #include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 
 #include "app.h"
+
+/// Write data frames
+void write_data_frames(
+    HighFive::DataSet& dset_energies, HighFive::DataSet& dset_configs,
+    uint64_t offset, uint64_t size, uint64_t N,
+    const arma::mat& buffer_energies, const arma::mat& buffer_configurations) {
+  // write energies
+  dset_energies
+      .select({offset}, {size})
+      .write_raw(buffer_energies.memptr());
+
+  // write spins
+  std::vector<std::vector<int8_t>> configs;
+  buffer_configurations.each_col([&configs, &N](auto& col) {
+    std::vector<int8_t> config(N);
+    std::transform(
+        col.cbegin(), col.cend(), config.begin(), [](auto& val) { return (val < 0 ? -1 : 1); });
+
+    configs.push_back(config);
+  });
+
+  dset_configs
+      .select({offset, 0}, {size, N})
+      .write(configs);
+}
 
 int main(int argc, char** argv) {
   std::cout << "*!> Welcome, this is "
@@ -53,7 +79,7 @@ int main(int argc, char** argv) {
   // Create group and buffer
   auto result_group = h5_file.createGroup("results");
   auto dset_energies = result_group.createDataSet<double>("energies", HighFive::DataSpace({simulation_parameters.N}));
-  auto dset_configs = result_group.createDataSet<double>(
+  auto dset_configs = result_group.createDataSet<int8_t>(
       "configs", HighFive::DataSpace({simulation_parameters.N, simulation.hamiltonian.number_of_magnetic_sites()}));
 
   std::array<double, 2> info = {simulation_parameters.T, simulation_parameters.H};
@@ -80,14 +106,8 @@ int main(int argc, char** argv) {
     if (istep > 0 && istep % simulation_parameters.save_interval == 0) {
       LOGD << "write frames [" << offset_first_frame << "," << istep << ")";
 
-      dset_energies
-          .select({offset_first_frame}, {simulation_parameters.save_interval})
-          .write_raw(buffer_energies.memptr());
-      dset_configs
-          .select(
-              {offset_first_frame, 0},
-              {simulation_parameters.save_interval, simulation.hamiltonian.number_of_magnetic_sites()})
-          .write_raw(buffer_configurations.memptr());
+      write_data_frames(dset_energies, dset_configs, offset_first_frame, simulation_parameters.save_interval,
+                        simulation.hamiltonian.number_of_magnetic_sites(), buffer_energies, buffer_configurations);
 
       isave++;
       offset_first_frame = isave * simulation_parameters.save_interval;
@@ -103,12 +123,9 @@ int main(int argc, char** argv) {
   // write last buffer
   uint64_t remaining_frames = simulation_parameters.N  - offset_first_frame;
   LOGD << "write frames [" << offset_first_frame << "," << simulation_parameters.N << ")";
-  dset_energies
-      .select({offset_first_frame}, {remaining_frames})
-      .write_raw(buffer_energies.memptr());
-  dset_configs
-      .select({offset_first_frame, 0}, {remaining_frames, simulation.hamiltonian.number_of_magnetic_sites()})
-      .write_raw(buffer_configurations.memptr());
+
+  write_data_frames(dset_energies, dset_configs, offset_first_frame, remaining_frames,
+                    simulation.hamiltonian.number_of_magnetic_sites(), buffer_energies, buffer_configurations);
 
   std::cout << "*!> Done running!\n";
 
