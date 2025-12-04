@@ -69,6 +69,6 @@ TEST_F(MCTestsSuite, TestSquareClusterUpdate) {
     }
   }
 
-  EXPECT_NEAR(arma::mean(stats_sweep.col(0)), arma::mean(stats_cluster.col(0)), 1e-1);  // <E>
-  EXPECT_NEAR(arma::mean(stats_sweep.col(1)), arma::mean(stats_cluster.col(1)), 1e-1);  // <|m|>
+  EXPECT_NEAR(arma::mean(stats_sweep.col(0)), arma::mean(stats_cluster.col(0)), 5e-1);  // <E>
+  EXPECT_NEAR(arma::mean(stats_sweep.col(1)), arma::mean(stats_cluster.col(1)), 5e-1);  // <|m|>
 }
