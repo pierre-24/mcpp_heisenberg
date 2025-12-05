@@ -78,7 +78,8 @@ std::string _get_word(std::istream& istream) {
 }
 
 Geometry Geometry::from_poscar(std::shared_ptr<std::istream> istream) {
-  LOGD << "start reading POSCAR";
+  elapsed::Chrono chrono;
+  LOGI << "*> Read geometry from POSCAR";
 
   // read the first line as is
   std::string title;
@@ -189,11 +190,14 @@ Geometry Geometry::from_poscar(std::shared_ptr<std::istream> istream) {
     }
   }
 
-  return Geometry(title, lattice, ions, positions);
+  LOGI << "<* Done (took " << chrono.format() << ")";
+
+  return {title, lattice, ions, positions};
 }
 
 Geometry Geometry::to_supercell(uint64_t nx, uint64_t ny, uint64_t nz, bool sort) const {
-  LOGD << "Make " << nx << "x" << ny << "x" << nz << " supercell";
+  elapsed::Chrono chrono;
+  LOGI << "*> Make a " << nx << "x" << ny << "x" << nz << " supercell";
 
   // make new positions and ions
   std::vector<ion_type_t> ions;
@@ -255,6 +259,8 @@ Geometry Geometry::to_supercell(uint64_t nx, uint64_t ny, uint64_t nz, bool sort
     ions = sorted_ions;
     positions = sorted_positions;
   }
+
+  LOGI << "<* Done (took " << chrono.format() << ")";
 
   return {_title, lattice, ions, positions};
 }

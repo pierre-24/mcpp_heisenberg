@@ -21,6 +21,9 @@ double IsingHamiltonian::energy(const arma::vec &spins) const {
 }
 
 IsingHamiltonian IsingHamiltonian::from_geometry(const Geometry& geometry, std::vector<jpairdef_t> pair_defs) {
+  elapsed::Chrono chrono;
+  LOGI << "*> Create pair list from geometry (" << geometry.number_of_atoms() << " magnetic sites)";
+
   // prepare geometry
   auto& positions = geometry.positions();
 
@@ -31,9 +34,6 @@ IsingHamiltonian IsingHamiltonian::from_geometry(const Geometry& geometry, std::
       ion_types.push_back(it.first);
     }
   }
-
-  LOGD << "Got " << geometry.number_of_atoms() << " magnetic sites";
-  LOGD << "create pair list";
 
   std::vector<jpair_t> pairs;
 
@@ -67,7 +67,7 @@ IsingHamiltonian IsingHamiltonian::from_geometry(const Geometry& geometry, std::
     }
   }
 
-  LOGD << "Done with list, got " << pairs.size() << " pairs";
+  LOGI << "<* Done with list, got " << pairs.size() << " pair interactions (took " << chrono.format() << ")";
 
   return {geometry.number_of_atoms(), pairs};
 }

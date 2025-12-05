@@ -42,9 +42,26 @@ pair_defs = [
 
 # simulation
 T = 0.1  # Temperature
-H = 0   # magnetic field (not implemented yet)
+H = 0   # magnetic field (not implemented yet!)
 N = 20000  # number of MC steps
 step_type = 'sweep'  # either 'sweep' (update sites one by ones) or 'cluster' (switch whole cluster) 
 
-save_interval = 1000 # frame buffer, requires `save_interval*n_mag_sites*sizeof(double)` of memory
+# save data frame
+save_interval = 1000 # saving interval, thus requireing `save_interval*n_mag_sites*sizeof(double)` of cache memory
+deflate_level = 6  # compression level for the `results/configs` dataset
+chunk_size = 1024  # chunk size for the `results/configs` dataset
 ```
+
+## Results
+
+After a run, the H5 file contains the following datasets:
+
++ `geometry/lattice_vectors` (`double (3, 3)`): lattice vectors;
++ `geometry/ion_types` (`uint64_t (Nspins, )`): type (chemical symbol) of each magnetic ion/spin;
++ `geometry/ion_numbers` (`str (Nspins, )`): number of each magnetic ion/spin;
++ `geometry/positions` (`uint64_t (3, Nspins)`): position of each magnetic ion/spin;
++ `hamiltonian/pairs` (`uint64_t (Npairs, 2)`): list of pairs;
++ `hamiltonian/J` (`double (Npairs, )`): for each pair, the value of the magnetic coupling, $J_{ij}$ ;
++ `results/T&H` (`double (2,)`): temperature and magnetic field applied during run;
++ `results/configs` (`int8_t (Nsteps, Nspins)`): for each step, the configuration of each spin;
++ `results/aggregated_data` (`double (Nsteps, 2)`): for each step, the (Ising) energy (col 0) and the sum of spins (col 1).

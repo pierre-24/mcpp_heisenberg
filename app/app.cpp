@@ -1,6 +1,13 @@
-#include <string>
+#include <algorithm>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <CLI/CLI.hpp>
+
+#include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 
 #include "app.h"
 
@@ -81,7 +88,6 @@ void Parameters::update(toml::table& input) {
   T = input["T"].value_or(T);
   H = input["H"].value_or(H);
   N = input["N"].value_or(N);
-  save_interval = input["save_interval"].value_or(save_interval);
 
   auto st_node = input["step_type"];
   if (!!st_node) {
@@ -94,6 +100,15 @@ void Parameters::update(toml::table& input) {
     } else {
       throw std::runtime_error("`step_type` must be either `sweep` or `cluster`");
     }
+  }
+
+  // results
+  save_interval = input["save_interval"].value_or(save_interval);
+  deflate_level = input["deflate_level"].value_or(deflate_level);
+  chunk_size = input["chunk_size"].value_or(chunk_size);
+
+  if (deflate_level > 9) {
+    throw std::runtime_error("`deflate_level` must be lower or equal to 9");
   }
 }
 
@@ -119,8 +134,12 @@ void Parameters::print(std::ostream& stream) const {
          << "T = " << T << "\n"
          << "H = " << H << "\n"
          << "N = " << N << "\n"
-         << "step_type = '" << (step_type == Sweep ? "sweep" : "cluster") << "'\n"
-         << "save_interval = " << save_interval << "\n";
+         << "step_type = '" << (step_type == Sweep ? "sweep" : "cluster") << "'\n";
+
+  stream << "# data frames\n"
+         << "save_interval = " << save_interval << "\n"
+         << "deflate_level = " << deflate_level << "\n"
+         << "chunk_size = " << chunk_size << "\n";
 }
 
 void set_log_level(plog::Severity default_) {
@@ -174,7 +193,7 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
   auto geometry = mch::Geometry::from_poscar(geometry_fs);
   geometry_fs->close();
 
-  std::cout << "*!> Geometry of the unit cell is::\n```\n" << geometry.to_poscar() << "```\n";
+  LOGI << "Geometry of the unit cell is::\n```\n" << geometry.to_poscar() << "```\n";
 
   // Make supercell
   std::cout << "*!> Make system\n";
@@ -183,7 +202,7 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
           .filter_atoms(parameters.magnetic_sites)
           .to_supercell(parameters.supercell_size[0], parameters.supercell_size[1], parameters.supercell_size[2]);
 
-  std::cout << "*!> Geometry of the system is::\n```\n" << supercell.to_poscar() << "```\n";
+  LOGI << "Geometry of the system is::\n```\n" << supercell.to_poscar() << "```\n";
 
   // Prepare hamiltonian
   std::cout << "*!> Make Hamiltonian\n";
@@ -206,4 +225,58 @@ void save_simulation(HighFive::File& file, const Simulation& simulation) {
   simulation.hamiltonian.to_h5_group(hamiltonian_group);
 }
 
+std::pair<HighFive::DataSet, HighFive::DataSet> create_result_datasets(
+HighFive::Group& result_group,
+const Parameters& simulation_parameters, const Simulation& simulation) {
+  LOGI << "Create result datasets";
+
+  // infos
+  std::array<double, 2> info = {simulation_parameters.T, simulation_parameters.H};
+  result_group.createDataSet("T&H", info).write(info);
+
+  // aggs
+  auto dset_aggs = result_group.createDataSet<double>(
+      "aggregated_data", HighFive::DataSpace({simulation_parameters.N, 2}));
+
+  // configs
+  HighFive::DataSetCreateProps dapl_configs;
+
+  dapl_configs.add(HighFive::Chunking(std::vector<hsize_t>{
+      std::min(simulation_parameters.chunk_size, simulation_parameters.N),
+      std::min(simulation_parameters.chunk_size, simulation.hamiltonian.number_of_magnetic_sites())}));
+
+  dapl_configs.add(HighFive::Deflate{simulation_parameters.deflate_level});
+
+  auto dset_configs = result_group.createDataSet<int8_t>(
+      "configs",
+      HighFive::DataSpace({simulation_parameters.N, simulation.hamiltonian.number_of_magnetic_sites()}),
+      dapl_configs);
+
+  return {dset_aggs, dset_configs};
+}
+
+void write_data_frames(
+HighFive::DataSet& dset_aggs, HighFive::DataSet& dset_configs,
+uint64_t offset, uint64_t size, uint64_t N,
+const arma::mat& buffer_aggs, const arma::mat& buffer_configs) {
+  LOGI << "Write frames [" << offset << "," << offset + size << ")";
+
+  // write energies
+  dset_aggs.select({offset, 0}, {size, 2})
+      .write_raw(buffer_aggs.memptr());
+
+  // write spins after transformation
+  std::vector<std::vector<int8_t>> configs;
+  buffer_configs.each_col([&configs, &N](auto& col) {
+    std::vector<int8_t> config(N);
+    std::transform(
+        col.cbegin(), col.cend(), config.begin(), [](auto& val) { return (val < 0 ? -1 : 1); });
+
+    configs.push_back(config);
+  });
+
+  dset_configs
+      .select({offset, 0}, {size, N})
+      .write(configs);
+}
 }  // namespace mch::app

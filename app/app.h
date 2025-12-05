@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <utility>
 
 #include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 
@@ -44,6 +45,12 @@ struct Parameters {
   /// Save interval
   uint64_t save_interval = 1000;
 
+  /// Deflate level
+  uint32_t deflate_level = 6;
+
+  /// Chunk size
+  uint64_t chunk_size = 1024;
+
   /// Update using TOML
   void update(toml::table& input);
 
@@ -68,6 +75,17 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
 
 /// Save simulation to H5
 void save_simulation(HighFive::File& file, const Simulation& simulation);
+
+/// Create result dataset
+std::pair<HighFive::DataSet, HighFive::DataSet> create_result_datasets(
+HighFive::Group& result_group,
+const Parameters& simulation_parameters, const Simulation& simulation);
+
+/// Write data frames
+void write_data_frames(
+HighFive::DataSet& dset_aggs, HighFive::DataSet& dset_configs,
+uint64_t offset, uint64_t size, uint64_t N,
+const arma::mat& buffer_aggs, const arma::mat& buffer_configs);
 
 }  // namespace mch::app
 
