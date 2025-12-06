@@ -2,7 +2,7 @@ import argparse
 
 import h5py
 
-from mcpy_heisenberg import Result
+from results import Result
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

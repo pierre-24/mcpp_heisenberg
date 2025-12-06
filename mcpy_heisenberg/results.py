@@ -20,7 +20,7 @@ class Result:
         return self.file['results/aggregated_data'][:]
 
     def get_statistics(self) -> tuple[float, float, float, float]:
-        """Return <E>/N, (<E²>-<E>²)/NT², <|M|>/N, (<M²>-<|M|>²)/N"""
+        """Return <E>/N, C_V = (<E²>-<E>²)/NT², <|M|>/N, χ = (<M²>-<|M|>²)/NT"""
 
         aggs = self.aggregated_data()
 
@@ -28,5 +28,5 @@ class Result:
             np.mean(aggs[:, 0]) / self.number_of_sites,
             (np.mean(aggs[:, 0] ** 2) - np.mean(aggs[:, 0])**2) / self.number_of_sites / (self.T ** 2),
             np.mean(np.abs(aggs[:, 1])) / self.number_of_sites,
-            (np.mean(aggs[:, 1] ** 2) - np.mean(np.abs(aggs[:, 1]))**2) / self.number_of_sites
+            (np.mean(aggs[:, 1] ** 2) - np.mean(np.abs(aggs[:, 1]))**2) / self.number_of_sites / self.T
         )
