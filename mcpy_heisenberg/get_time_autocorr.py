@@ -19,9 +19,9 @@ if __name__ == '__main__':
 
         autocov = Result.sample_autocovariance(results.aggregated_data()[:, args.n], args.N)
 
-        # rough estimate of t
-        t = np.where(autocov < np.exp(-1))[0]
-        print("estimated t =", t[0] if len(t) > 0 else '-1')
+        # rough estimate of τ
+        tau = np.where(autocov < np.exp(-1))[0]
+        print("estimated τ =", tau[0] if len(tau) > 0 else '-1')
 
         plt.plot(np.arange(0, args.N), autocov)
         plt.show()

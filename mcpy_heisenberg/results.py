@@ -42,5 +42,5 @@ class Result:
         """
 
         x_shifted = x - np.mean(x)
-        autocorr = np.array([np.dot(x_shifted[:len(x)-t],x_shifted[t:]) / len(x) for t in range(tmax)])
+        autocorr = np.array([np.dot(x_shifted[:len(x)-t],x_shifted[t:]) / (len(x) - t) for t in range(tmax)])
         return autocorr / autocorr[0]
