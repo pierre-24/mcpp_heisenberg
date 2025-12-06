@@ -13,12 +13,14 @@ namespace mch {
 
 class IsingMonteCarloRunner {
  protected:
-  /// IsingHamiltonian
+  /// Value of Boltzmann constant
+  double _kB {1.0};
+  /// Ising Hamiltonian
   IsingHamiltonian _hamiltonian;
   /// Spin configuration
   arma::vec _spins;
   /// energy associated to `_spin`
-  double _energy;
+  double _energy{.0};
   /// Generator
   std::mt19937 _rng;
 
@@ -26,7 +28,8 @@ class IsingMonteCarloRunner {
   std::vector<std::pair<double, arma::vec>> _frames;
 
  public:
-  explicit IsingMonteCarloRunner(const IsingHamiltonian& hamiltonian): _hamiltonian{hamiltonian} {
+  explicit IsingMonteCarloRunner(const IsingHamiltonian& hamiltonian, double kB = 1.0)
+      : _kB{kB}, _hamiltonian{hamiltonian} {
     _spins.resize(hamiltonian.number_of_magnetic_sites());
 
     // initialize random generator

@@ -87,6 +87,7 @@ void Parameters::update(toml::table& input) {
   // simulation
   T = input["T"].value_or(T);
   H = input["H"].value_or(H);
+  kB = input["kB"].value_or(kB);
   N = input["N"].value_or(N);
 
   auto st_node = input["step_type"];
@@ -131,6 +132,7 @@ void Parameters::print(std::ostream& stream) const {
   stream << "]\n";
 
   stream << "# simulation\n"
+         << "kB = " << kB << "\n"
          << "T = " << T << "\n"
          << "H = " << H << "\n"
          << "N = " << N << "\n"
@@ -213,7 +215,7 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
   return {
       .geometry = supercell,
       .hamiltonian = hamiltonian,
-      .runner = mch::IsingMonteCarloRunner(hamiltonian)
+      .runner = mch::IsingMonteCarloRunner(hamiltonian, parameters.kB)
   };
 }
 
@@ -233,6 +235,9 @@ const Parameters& simulation_parameters, const Simulation& simulation) {
   // infos
   std::array<double, 2> info = {simulation_parameters.T, simulation_parameters.H};
   result_group.createDataSet("T&H", info).write(info);
+
+  std::array<double, 1> kB = {simulation_parameters.kB};
+  result_group.createDataSet("kB", kB).write(kB);
 
   // aggs
   auto dset_aggs = result_group.createDataSet<double>(

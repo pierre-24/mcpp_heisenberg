@@ -30,6 +30,9 @@ struct Parameters {
   /// Pair definitions
   std::vector<mch::jpairdef_t> pair_defs;
 
+  /// Boltzmann constant
+  double kB = 1.0;
+
   /// Temperature
   double T = 0.1;
 

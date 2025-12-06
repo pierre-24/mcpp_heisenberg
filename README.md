@@ -41,6 +41,7 @@ pair_defs = [
 ]
 
 # simulation
+kB = 1.0  # boltzmann constant in unit of J/T
 T = 0.1  # Temperature
 H = 0   # magnetic field (not implemented yet!)
 N = 20000  # number of MC steps
@@ -52,6 +53,9 @@ deflate_level = 6  # compression level for the `results/configs` dataset
 chunk_size = 1024  # chunk size for the `results/configs` dataset
 ```
 
+The value for `kB` will depends on the unit for temperature (`T`) and energy (`J`).
+In particular, `kB = 8.61733326e-5` is relevant when using Kelvin and eV, while `kB = 1` in reduced units.
+
 ## Results
 
 After a run, the H5 file contains the following datasets:
@@ -62,6 +66,7 @@ After a run, the H5 file contains the following datasets:
 + `geometry/positions` (`uint64_t (3, Nspins)`): position of each magnetic ion/spin;
 + `hamiltonian/pairs` (`uint64_t (Npairs, 2)`): list of pairs;
 + `hamiltonian/J` (`double (Npairs, )`): for each pair, the value of the magnetic coupling, $J_{ij}$ ;
++ `results/kB` (`double (1,)`): value of the [Boltzmann constant](https://en.wikipedia.org/wiki/Boltzmann_constant) ($k_B$) used during simulation;
 + `results/T&H` (`double (2,)`): temperature and magnetic field applied during run;
 + `results/configs` (`int8_t (Nsteps, Nspins)`): for each step, the configuration of each spin;
 + `results/aggregated_data` (`double (Nsteps, 2)`): for each step, the (Ising) energy (col 0) and the sum of spins (col 1).
