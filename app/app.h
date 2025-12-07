@@ -15,6 +15,8 @@ namespace mch::app {
 enum StartConfig {
   /// Ferrimagnetic (all up) config
   Ferri,
+  /// All down config
+  FerriDown,
   /// Random config
   Random
 };

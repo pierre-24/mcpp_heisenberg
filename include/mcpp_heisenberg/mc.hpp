@@ -38,6 +38,21 @@ class FerriInitialConfig : public InitialConfig{
   }
 };
 
+/// All spin down
+class FerriDownInitalConfig: public FerriInitialConfig {
+ public:
+  FerriDownInitalConfig() = delete;
+
+  explicit FerriDownInitalConfig(const arma::vec& spin_values) : FerriInitialConfig(spin_values) {}
+
+  [[nodiscard]] arma::vec make() const override {
+    auto config = FerriInitialConfig::make();
+    config *= -1;
+
+    return config;
+  }
+};
+
 /// Random configuration
 class RandomInitialConfig: public FerriInitialConfig {
  public:
