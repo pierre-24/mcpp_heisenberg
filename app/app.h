@@ -44,6 +44,9 @@ struct Parameters {
   /// Boltzmann constant
   double kB = 1.0;
 
+  /// Bohr magneton
+  double muB = 1.0;
+
   /// Temperature
   double T = 0.1;
 

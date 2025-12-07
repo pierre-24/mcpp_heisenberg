@@ -67,6 +67,8 @@ class IsingMonteCarloRunner {
  protected:
   /// Value of Boltzmann constant
   double _kB {1.0};
+  /// Value of muB
+  double _muB{1.0};
   /// Ising Hamiltonian
   IsingHamiltonian _hamiltonian;
   /// Spin configuration
@@ -80,8 +82,9 @@ class IsingMonteCarloRunner {
   std::vector<std::pair<double, arma::vec>> _frames;
 
  public:
-  explicit IsingMonteCarloRunner(const IsingHamiltonian& hamiltonian, const arma::vec& initial, double kB = 1.0)
-      : _kB{kB}, _hamiltonian{hamiltonian} {
+  explicit IsingMonteCarloRunner(
+      const IsingHamiltonian& hamiltonian, const arma::vec& initial, double kB = 1.0, double muB = 1.0)
+      : _kB{kB}, _muB{muB}, _hamiltonian{hamiltonian} {
     // initialize random generator
     std::random_device rd;
     _rng = std::mt19937(rd());

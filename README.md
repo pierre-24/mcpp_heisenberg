@@ -44,8 +44,9 @@ start_config = 'random'  # either "random" or "ferri"
 
 # simulation
 kB = 1.0  # boltzmann constant in unit of J/T
+muB = 1.0  # bohr magneton, in units of J/H
 T = 0.1  # Temperature
-H = 0   # magnetic field (not implemented yet!)
+H = 0   # magnetic field
 N = 20000  # number of MC steps
 step_type = 'sweep'  # either 'sweep' (update sites one by ones) or 'cluster' (switch whole cluster) 
 
@@ -55,20 +56,20 @@ deflate_level = 6  # compression level for the `results/configs` dataset
 chunk_size = 1024  # chunk size for the `results/configs` dataset
 ```
 
-The value for `kB` will depends on the unit for temperature (`T`) and energy (`J`).
-In particular, `kB = 8.61733326e-5` is relevant when using Kelvin and eV, while `kB = 1` in reduced units.
+The value for `kB` and `muB` will depends on the unit for temperature (`T`), magnetic field (`H`), and energy (`J`).
+In particular, `kB = 8.61733326e-5` and `muB = 5.788381e-5` are relevant when using Kelvin, Tesla, and eV, while `kB = 1` and `muB = 1` in reduced units.
 
 ## Results
 
 After a run, the H5 file contains the following datasets:
 
 + `geometry/lattice_vectors` (`double (3, 3)`): lattice vectors;
-+ `geometry/ion_types` (`uint64_t (Nspins, )`): type (chemical symbol) of each magnetic ion/spin;
-+ `geometry/ion_numbers` (`str (Nspins, )`): number of each magnetic ion/spin;
++ `geometry/ion_types` (`uint64_t (Ntypes, )`): type (chemical symbol) of each magnetic ion/spin;
++ `geometry/ion_numbers` (`str (Ntypes, )`): number of each magnetic ion/spin;
 + `geometry/positions` (`uint64_t (3, Nspins)`): position of each magnetic ion/spin;
 + `hamiltonian/pairs` (`uint64_t (Npairs, 2)`): list of pairs;
 + `hamiltonian/J` (`double (Npairs, )`): for each pair, the value of the magnetic coupling, $J_{ij}$ ;
-+ `results/kB` (`double (1,)`): value of the [Boltzmann constant](https://en.wikipedia.org/wiki/Boltzmann_constant) ($k_B$) used during simulation;
++ `results/kB&muB` (`double (2,)`): value of the [Boltzmann constant](https://en.wikipedia.org/wiki/Boltzmann_constant) ($k_B$) and of the [Bohr magneton](https://en.wikipedia.org/wiki/Bohr_magneton) ($\mu_B$) used during simulation;
 + `results/T&H` (`double (2,)`): temperature and magnetic field applied during run;
-+ `results/configs` (`int8_t (Nsteps, Nspins)`): for each step, the configuration of each spin;
++ `results/configs` (`int8_t (Nsteps, Nspins)`): for each step, `sign(spins)`;
 + `results/aggregated_data` (`double (Nsteps, 2)`): for each step, the (Ising) energy (col 0) and the sum of spins (col 1).

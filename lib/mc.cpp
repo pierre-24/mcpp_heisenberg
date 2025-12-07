@@ -14,7 +14,7 @@ void IsingMonteCarloRunner::sweep(double T, double H) {
   std::uniform_real_distribution<> dis(.0, 1.);
 
   for (uint64_t ispin = 0; ispin < _hamiltonian.number_of_magnetic_sites(); ++ispin) {
-    double dE = _hamiltonian.delta_energy(_spins, ispin);
+    double dE = _hamiltonian.delta_energy(_spins, ispin, H / _muB);
 
     if ((dE < 0) || (dis(_rng) < exp(-dE / (_kB * T)))) {
       _spins.at(ispin) *= -1;
@@ -55,7 +55,7 @@ uint64_t IsingMonteCarloRunner::cluster_update(double T, double H) {
   }
 
   // re-compute energy
-  _energy = _hamiltonian.energy(_spins);
+  _energy = _hamiltonian.energy(_spins, H / _muB);
 
   return cluster_size;
 }

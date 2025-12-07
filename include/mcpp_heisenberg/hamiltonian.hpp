@@ -87,10 +87,10 @@ class IsingHamiltonian {
   [[nodiscard]] uint64_t number_of_pairs() const { return _pairs.size(); }
 
   /// Compute the energy
-  [[nodiscard]] double energy(const arma::vec& spins) const;
+  [[nodiscard]] double energy(const arma::vec& spins, double H = .0) const;
 
   /// Compute the change in energy due to flip of spin `i`
-  [[nodiscard]] double delta_energy(const arma::vec& spins, uint64_t i) const;
+  [[nodiscard]] double delta_energy(const arma::vec& spins, uint64_t i, double H = .0) const;
 
   /// Get neighbors of i, a list of `(k, J_ik)`, where `k` is the index of the neighbor and `J_ik` is
   /// the coupling strength between these two.

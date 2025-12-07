@@ -101,6 +101,7 @@ void Parameters::update(toml::table& input) {
   T = input["T"].value_or(T);
   H = input["H"].value_or(H);
   kB = input["kB"].value_or(kB);
+  muB = input["muB"].value_or(muB);
   N = input["N"].value_or(N);
 
   auto st_node = input["step_type"];
@@ -148,6 +149,7 @@ void Parameters::print(std::ostream& stream) const {
 
   stream << "# simulation\n"
          << "kB = " << kB << "\n"
+         << "muB = " << muB << "\n"
          << "T = " << T << "\n"
          << "H = " << H << "\n"
          << "N = " << N << "\n"
@@ -260,8 +262,8 @@ const Parameters& simulation_parameters, const Simulation& simulation) {
   std::array<double, 2> info = {simulation_parameters.T, simulation_parameters.H};
   result_group.createDataSet("T&H", info).write(info);
 
-  std::array<double, 1> kB = {simulation_parameters.kB};
-  result_group.createDataSet("kB", kB).write(kB);
+  std::array<double, 2> kB = {simulation_parameters.kB, simulation_parameters.muB};
+  result_group.createDataSet("kB&muB", kB).write(kB);
 
   // aggs
   auto dset_aggs = result_group.createDataSet<double>(
