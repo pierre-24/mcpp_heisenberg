@@ -31,7 +31,10 @@ struct Parameters {
   /// Pair definitions
   std::vector<mch::jpairdef_t> pair_defs;
 
-  /// Starting confi
+  /// Spin values
+  std::map<std::string, double> spin_values;
+
+  /// Starting config
   StartConfig start_config = Ferri;
 
   /// Boltzmann constant

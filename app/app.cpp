@@ -83,6 +83,23 @@ void Parameters::update(toml::table& input) {
           subarray.at(3).as_floating_point()->get()});
     }
   }
+  
+  auto sv_node = input["spin_values"];
+  if (!!sv_node) {
+    if (!sv_node.is_table()) {
+      throw std::runtime_error("`spin_values` must be a table");
+    }
+    
+    auto& table = *sv_node.as_table();
+
+    table.for_each([this](const toml::key& key, auto&& val){
+      if (!val.is_integer() && !val.is_floating_point()) {
+        throw std::runtime_error("`spin_values` must contain floats as values");
+      }
+
+      spin_values[std::string(key.str())]= val.as_floating_point()->get();
+    });
+  }
 
   auto sc_node = input["start_config"];
   if (!!sc_node) {
@@ -133,6 +150,13 @@ void Parameters::print(std::ostream& stream) const {
   }
 
   stream << "]\n";
+
+  stream << "spin_values = {\n";
+  for (auto& pair : spin_values) {
+    stream << "  " << pair.first << " = " << pair.second << ",\n";
+  }
+
+  stream << "}\n";
 
   stream << "start_config = '";
 
@@ -230,6 +254,15 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
 
   auto spin_values = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0));
 
+  uint64_t nx = 0;
+  for (auto& iondef : supercell.ions()) {
+    if (parameters.spin_values.contains(iondef.first)) {
+      spin_values.subvec(nx, nx + iondef.second - 1) *= parameters.spin_values.at(iondef.first);
+    }
+
+    nx += iondef.second;
+  }
+
   if (parameters.start_config == StartConfig::Random) {
     spin_values = mch::RandomInitialConfig(spin_values).make();
   } else if (parameters.start_config == StartConfig::Ferri) {
@@ -267,6 +300,18 @@ const Parameters& simulation_parameters, const Simulation& simulation) {
 
   std::array<double, 2> kB = {simulation_parameters.kB, simulation_parameters.muB};
   result_group.createDataSet("kB&muB", kB).write(kB);
+
+  // spin values
+  std::vector<double> spin_values;
+  for (auto& iondef : simulation.geometry.ions()) {
+    if (simulation_parameters.spin_values.contains(iondef.first)) {
+      spin_values.push_back(simulation_parameters.spin_values.at(iondef.first));
+    } else {
+      spin_values.push_back(1.0);
+    }
+  }
+
+  result_group.createDataSet("spin_values", spin_values).write(spin_values);
 
   // aggs
   auto dset_aggs = result_group.createDataSet<double>(

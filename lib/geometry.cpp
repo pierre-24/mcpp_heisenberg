@@ -291,9 +291,9 @@ Geometry Geometry::filter_atoms(const std::vector<std::string>& atoms) const {
         positions.rows(ni, ni + it.second - 1) = _positions.rows(nj, nj + it.second - 1);
         ni += it.second;
       }
-
-      nj += it.second;
     }
+
+    nj += it.second;
   }
 
   return {_title, _lattice_vectors, ions, positions};

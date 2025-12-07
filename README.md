@@ -64,11 +64,12 @@ After a run, the H5 file contains the following datasets:
 
 + `geometry/lattice_vectors` (`double (3, 3)`): lattice vectors;
 + `geometry/ion_types` (`uint64_t (Ntypes, )`): type (chemical symbol) of each magnetic ion/spin;
-+ `geometry/ion_numbers` (`str (Ntypes, )`): number of each magnetic ion/spin;
++ `geometry/ion_numbers` (`str (Ntypes, )`): number of each magnetic ion/spin type;
 + `geometry/positions` (`uint64_t (3, Nspins)`): position of each magnetic ion/spin;
 + `hamiltonian/pairs` (`uint64_t (Npairs, 2)`): list of pairs;
 + `hamiltonian/J` (`double (Npairs, )`): for each pair, the value of the magnetic coupling, $J_{ij}$ ;
 + `results/kB&muB` (`double (2,)`): value of the [Boltzmann constant](https://en.wikipedia.org/wiki/Boltzmann_constant) ($k_B$) and of the [Bohr magneton](https://en.wikipedia.org/wiki/Bohr_magneton) ($\mu_B$) used during simulation;
 + `results/T&H` (`double (2,)`): temperature and magnetic field applied during run;
++ `results/spin_valuees` (`double (Ntypes, )`): for each magnetic/ion type, the initial spin value ($|S_i|$) ;
 + `results/configs` (`int8_t (Nsteps, Nspins)`): for each step, `sign(spins)`;
 + `results/aggregated_data` (`double (Nsteps, 2)`): for each step, the (Ising) energy (col 0) and the sum of spins (col 1).
