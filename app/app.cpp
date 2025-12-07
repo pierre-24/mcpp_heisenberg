@@ -104,19 +104,6 @@ void Parameters::update(toml::table& input) {
   muB = input["muB"].value_or(muB);
   N = input["N"].value_or(N);
 
-  auto st_node = input["step_type"];
-  if (!!st_node) {
-    std::string m = st_node.value_or("sweep");
-
-    if (m == "S" || m == "sweep") {
-      step_type = Sweep;
-    } else if (m == "C" || m == "cluster") {
-      step_type = Cluster;
-    } else {
-      throw std::runtime_error("`step_type` must be either `sweep` or `cluster`");
-    }
-  }
-
   // results
   save_interval = input["save_interval"].value_or(save_interval);
   deflate_level = input["deflate_level"].value_or(deflate_level);
@@ -152,8 +139,7 @@ void Parameters::print(std::ostream& stream) const {
          << "muB = " << muB << "\n"
          << "T = " << T << "\n"
          << "H = " << H << "\n"
-         << "N = " << N << "\n"
-         << "step_type = '" << (step_type == Sweep ? "sweep" : "cluster") << "'\n";
+         << "N = " << N << "\n";
 
   stream << "# data frames\n"
          << "save_interval = " << save_interval << "\n"

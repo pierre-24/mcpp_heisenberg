@@ -11,15 +11,6 @@
 
 namespace mch::app {
 
-/// Type of update at each MC step
-enum MCStepType {
-  /// Sweep through all spins and update one by one
-  Sweep,
-
-  /// Cluster update
-  Cluster
-};
-
 /// Starting configuration
 enum StartConfig {
   /// Ferrimagnetic (all up) config
@@ -55,9 +46,6 @@ struct Parameters {
 
   /// Number of steps
   uint64_t N = 1000;
-
-  /// Type of update
-  MCStepType step_type = Sweep;
 
   /// Save interval
   uint64_t save_interval = 1000;

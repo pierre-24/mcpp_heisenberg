@@ -48,7 +48,6 @@ muB = 1.0  # bohr magneton, in units of J/H
 T = 0.1  # Temperature
 H = 0   # magnetic field
 N = 20000  # number of MC steps
-step_type = 'sweep'  # either 'sweep' (update sites one by ones) or 'cluster' (switch whole cluster) 
 
 # save data frame
 save_interval = 1000 # saving interval, thus requireing `save_interval*n_mag_sites*sizeof(double)` of cache memory

@@ -45,28 +45,3 @@ TEST_F(MCTestsSuite, TestSquareLowTemp) {
   EXPECT_NEAR(arma::mean(stats.col(0)) / static_cast<double>(N * N), -2, 1e-3);  // <E>
   EXPECT_NEAR(arma::mean(stats.col(1)) / static_cast<double>(N * N), 1., 1e-3);  // <|m|>
 }
-
-/// Test square cluster update, in the low temperature limit
-TEST_F(MCTestsSuite, TestSquareClusterUpdate) {
-  uint64_t MAX = 10000;
-
-  auto initial = mch::RandomInitialConfig(arma::vec(
-      square_hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0))).make();
-  auto runner_sweep = mch::IsingMonteCarloRunner(square_hamiltonian, initial);
-  auto runner_cluster = mch::IsingMonteCarloRunner(square_hamiltonian, initial);
-  double T = 1.5;
-
-  arma::mat stats_sweep(MAX, 2);
-  arma::mat stats_cluster(MAX, 2);
-
-  for (uint64_t i = 0; i < MAX; ++i) {
-    runner_sweep.sweep(T);
-    runner_cluster.cluster_update(T);
-
-    stats_sweep.row(i) = {runner_sweep.energy(), fabs(arma::sum(runner_sweep.spins()))};
-    stats_cluster.row(i) = {runner_cluster.energy(), fabs(arma::sum(runner_cluster.spins()))};
-  }
-
-  EXPECT_NEAR(arma::mean(stats_sweep.col(0)), arma::mean(stats_cluster.col(0)), 5e-1);  // <E>
-  EXPECT_NEAR(arma::mean(stats_sweep.col(1)), arma::mean(stats_cluster.col(1)), 5e-1);  // <|m|>
-}

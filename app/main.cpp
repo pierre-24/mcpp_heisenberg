@@ -70,8 +70,7 @@ int main(int argc, char** argv) {
   print_title(std::cout, "Run MC");
 
   mch::elapsed::Chrono chrono_run;
-  std::cout << "*!> Run for " << simulation_parameters.N << " steps, using "
-            << (simulation_parameters.step_type == mch::app::Sweep ? "sweep" : "cluster") << " updates\n";
+  std::cout << "*!> Run for " << simulation_parameters.N << " steps\n";
 
   // Create group and buffer
   auto result_group = h5_file.createGroup("results");
@@ -87,14 +86,11 @@ int main(int argc, char** argv) {
   uint64_t isave = 0;
   double mean_energy = .0;
   double mean_magnetization = .0;
+  double mean_abs_magnetization = .0;
   uint64_t offset_first_frame = 0;
 
   for (uint64_t istep = 0; istep < simulation_parameters.N; ++istep) {
-    if (simulation_parameters.step_type == mch::app::Sweep) {
-      simulation.runner.sweep(simulation_parameters.T, simulation_parameters.H);
-    } else {
-      simulation.runner.cluster_update(simulation_parameters.T, simulation_parameters.H);
-    }
+    simulation.runner.sweep(simulation_parameters.T, simulation_parameters.H);
 
     // write buffer
     if (istep > 0 && istep % simulation_parameters.save_interval == 0) {
@@ -114,7 +110,8 @@ int main(int argc, char** argv) {
     buffer_configs.col(istep % simulation_parameters.save_interval) = simulation.runner.spins();
 
     mean_energy += simulation.runner.energy();
-    mean_magnetization += fabs(arma::sum(simulation.runner.spins()));
+    mean_magnetization += arma::sum(simulation.runner.spins());
+    mean_abs_magnetization += fabs(arma::sum(simulation.runner.spins()));
   }
 
   // write last data frames
@@ -135,7 +132,8 @@ int main(int argc, char** argv) {
   std::cout << "*!> Statistics over " << simulation_parameters.N << " steps "
             << "(N=" << simulation.hamiltonian.number_of_magnetic_sites() << ") :: "
             << "<E>/N = " << mean_energy / dN << ", "
-            << "<|m|>/N = " << mean_magnetization / dN << "\n";
+            << "<m>/N = " << mean_magnetization / dN << ", "
+            << "<|m|>/N = " << mean_abs_magnetization / dN << "\n";
 
   std::cout << "*!> Done (took " << chrono_all.format() << ")\n";
 

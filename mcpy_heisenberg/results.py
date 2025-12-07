@@ -15,20 +15,21 @@ class Result:
     def aggregated_data(self) -> NDArray[float]:
         return self.file['results/aggregated_data'][:]
 
-    def get_statistics(self) -> tuple[float, float, float, float]:
-        """Return <E>/N, C_V = (<E²>-<E>²)/NT², <|M|>/N, χ = (<M²>-<M>²)/NT"""
+    def get_statistics(self) -> tuple[float, float, float, float, float]:
+        """Return <E>/N, C_V = (<E²>-<E>²)/NT², <M>/N, <|M|>/N, χ = (<M²>-<M>²)/NT"""
 
         aggs = self.aggregated_data()
 
         E = np.mean(aggs[:, 0])
         E2 = np.mean(aggs[:, 0] ** 2)
         Mabs = np.mean(np.abs(aggs[:, 1]))
-        M = np.mean(np.abs(aggs[:, 1]))
+        M = np.mean(aggs[:, 1])
         M2 = np.mean(aggs[:, 1] ** 2)
 
         return (
             E / self.number_of_sites,
             (E2 - E**2) / self.number_of_sites / (self.T ** 2),
+            M / self.number_of_sites,
             Mabs / self.number_of_sites,
             (M2 - M**2) / self.number_of_sites / self.T
         )

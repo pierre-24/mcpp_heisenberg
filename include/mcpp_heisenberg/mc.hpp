@@ -110,9 +110,6 @@ class IsingMonteCarloRunner {
 
   /// Sweep over all spins (at a given temperature `T` and a given magnetic field `H`) and switch them if any
   void sweep(double T, double H = .0);
-
-  /// do a cluster update
-  uint64_t cluster_update(double T, double H = .0);
 };
 
 }  // namespace mch
