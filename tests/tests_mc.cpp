@@ -1,6 +1,5 @@
 #include <vector>
 #include <filesystem>
-#include <cstdio>
 
 #include <mcpp_heisenberg/mc.hpp>
 
@@ -28,20 +27,20 @@ class MCTestsSuite : public MCHTestsSuite {
 /// Test the low temperature limit
 TEST_F(MCTestsSuite, TestSquareLowTemp) {
   uint64_t MAX = 10000;
-  uint64_t PROD_START = MAX / 10 * 2;
 
-  auto runner = mch::IsingMonteCarloRunner(square_hamiltonian);
   double T = 0.1;
+  auto initial = mch::FerriInitialConfig(arma::vec(
+      square_hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0))).make();
+  auto runner = mch::IsingMonteCarloRunner(square_hamiltonian, initial);
 
-  arma::mat stats(MAX - PROD_START, 2);
+  arma::mat stats(MAX, 2);
 
   for (uint64_t i = 0; i < MAX; ++i) {
     runner.sweep(T);
-
-    if (i > PROD_START) {
-      stats.row(i - PROD_START) = {runner.energy(), fabs(arma::sum(runner.spins()))};
-    }
+    stats.row(i) = {runner.energy(), fabs(arma::sum(runner.spins()))};
   }
+
+  LOGD << "last config is " << runner.spins();
 
   EXPECT_NEAR(arma::mean(stats.col(0)) / static_cast<double>(N * N), -2, 1e-3);  // <E>
   EXPECT_NEAR(arma::mean(stats.col(1)) / static_cast<double>(N * N), 1., 1e-3);  // <|m|>
@@ -50,23 +49,22 @@ TEST_F(MCTestsSuite, TestSquareLowTemp) {
 /// Test square cluster update, in the low temperature limit
 TEST_F(MCTestsSuite, TestSquareClusterUpdate) {
   uint64_t MAX = 10000;
-  uint64_t PROD_START = MAX / 10 * 2;
 
-  auto runner_sweep = mch::IsingMonteCarloRunner(square_hamiltonian);
-  auto runner_cluster = mch::IsingMonteCarloRunner(square_hamiltonian);
+  auto initial = mch::RandomInitialConfig(arma::vec(
+      square_hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0))).make();
+  auto runner_sweep = mch::IsingMonteCarloRunner(square_hamiltonian, initial);
+  auto runner_cluster = mch::IsingMonteCarloRunner(square_hamiltonian, initial);
   double T = 1.5;
 
-  arma::mat stats_sweep(MAX - PROD_START, 2);
-  arma::mat stats_cluster(MAX - PROD_START, 2);
+  arma::mat stats_sweep(MAX, 2);
+  arma::mat stats_cluster(MAX, 2);
 
   for (uint64_t i = 0; i < MAX; ++i) {
     runner_sweep.sweep(T);
     runner_cluster.cluster_update(T);
 
-    if (i > PROD_START) {
-      stats_sweep.row(i - PROD_START) = {runner_sweep.energy(), fabs(arma::sum(runner_sweep.spins()))};
-      stats_cluster.row(i - PROD_START) = {runner_cluster.energy(), fabs(arma::sum(runner_cluster.spins()))};
-    }
+    stats_sweep.row(i) = {runner_sweep.energy(), fabs(arma::sum(runner_sweep.spins()))};
+    stats_cluster.row(i) = {runner_cluster.energy(), fabs(arma::sum(runner_cluster.spins()))};
   }
 
   EXPECT_NEAR(arma::mean(stats_sweep.col(0)), arma::mean(stats_cluster.col(0)), 5e-1);  // <E>

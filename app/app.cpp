@@ -84,6 +84,19 @@ void Parameters::update(toml::table& input) {
     }
   }
 
+  auto sc_node = input["start_config"];
+  if (!!sc_node) {
+    std::string m = sc_node.value_or("random");
+
+    if (m == "R" || m == "random") {
+      start_config = StartConfig::Random;
+    } else if (m == "F" || m == "ferri") {
+      start_config = StartConfig::Ferri;
+    } else {
+      throw std::runtime_error("`start_config` must be either `random` or `ferri`");
+    }
+  }
+
   // simulation
   T = input["T"].value_or(T);
   H = input["H"].value_or(H);
@@ -130,6 +143,8 @@ void Parameters::print(std::ostream& stream) const {
   }
 
   stream << "]\n";
+
+  stream << "start_config = '" << (start_config == Random ? "random" : "ferri") << "'\n";
 
   stream << "# simulation\n"
          << "kB = " << kB << "\n"
@@ -212,10 +227,19 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
 
   // Make runner
   std::cout << "*!> Make runner\n";
+
+  auto spin_values = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0));
+
+  if (parameters.start_config == StartConfig::Random) {
+    spin_values = mch::RandomInitialConfig(spin_values).make();
+  } else if (parameters.start_config == StartConfig::Ferri) {
+    spin_values = mch::FerriInitialConfig(spin_values).make();
+  }
+
   return {
       .geometry = supercell,
       .hamiltonian = hamiltonian,
-      .runner = mch::IsingMonteCarloRunner(hamiltonian, parameters.kB)
+      .runner = mch::IsingMonteCarloRunner(hamiltonian, spin_values, parameters.kB)
   };
 }
 

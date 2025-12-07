@@ -40,6 +40,8 @@ pair_defs = [
   ['H', 'H', 2.0, 1.0]
 ]
 
+start_config = 'random'  # either "random" or "ferri"
+
 # simulation
 kB = 1.0  # boltzmann constant in unit of J/T
 T = 0.1  # Temperature

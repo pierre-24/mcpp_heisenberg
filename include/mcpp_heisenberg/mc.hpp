@@ -11,6 +11,58 @@
 
 namespace mch {
 
+class InitialConfig {
+ protected:
+  /// Number of sites
+  uint64_t _number_of_sites{0};
+ public:
+  InitialConfig() = delete;
+
+  explicit InitialConfig(uint64_t n): _number_of_sites{n} {}
+
+  virtual arma::vec make() const = 0;
+};
+
+/// All spin ups
+class FerriInitialConfig : public InitialConfig{
+ protected:
+  arma::vec _spin_values;
+ public:
+  FerriInitialConfig() = delete;
+
+  explicit FerriInitialConfig(const arma::vec& spin_values)
+      : InitialConfig(spin_values.n_rows), _spin_values{spin_values} {}
+
+  [[nodiscard]] arma::vec make() const override {
+    return _spin_values;
+  }
+};
+
+/// Random configuration
+class RandomInitialConfig: public FerriInitialConfig {
+ public:
+  RandomInitialConfig() = delete;
+
+  explicit RandomInitialConfig(const arma::vec& spin_values) : FerriInitialConfig(spin_values) {}
+
+  [[nodiscard]] arma::vec make() const override {
+    auto config = FerriInitialConfig::make();
+
+    // initialize random generator
+    std::random_device rd;
+    auto rng = std::mt19937(rd());
+    std::bernoulli_distribution dis(0.5);
+
+    config.for_each([&dis, &rng](auto& val) {
+      if (dis(rng)) {
+        val *= -1;
+      }
+    });
+
+    return config;
+  }
+};
+
 class IsingMonteCarloRunner {
  protected:
   /// Value of Boltzmann constant
@@ -28,18 +80,16 @@ class IsingMonteCarloRunner {
   std::vector<std::pair<double, arma::vec>> _frames;
 
  public:
-  explicit IsingMonteCarloRunner(const IsingHamiltonian& hamiltonian, double kB = 1.0)
+  explicit IsingMonteCarloRunner(const IsingHamiltonian& hamiltonian, const arma::vec& initial, double kB = 1.0)
       : _kB{kB}, _hamiltonian{hamiltonian} {
-    _spins.resize(hamiltonian.number_of_magnetic_sites());
-
     // initialize random generator
     std::random_device rd;
     _rng = std::mt19937(rd());
 
-    // choose a random configuration
-    auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::randu);
-    spins.for_each([](double& e) { e = e >= .5 ? 1.0 : -1.0; });
-    set_spins(spins);
+    LOGD << "initial config is " << initial << ", sum = " << arma::sum(initial);
+
+    // choose a starting config
+    set_spins(initial);
   }
 
   /// Get current spin configuration

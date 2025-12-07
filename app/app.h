@@ -20,6 +20,14 @@ enum MCStepType {
   Cluster
 };
 
+/// Starting configuration
+enum StartConfig {
+  /// Ferrimagnetic (all up) config
+  Ferri,
+  /// Random config
+  Random
+};
+
 struct Parameters {
   /// Size of the supercell
   std::array<uint64_t, 3> supercell_size = {1, 1, 1};
@@ -29,6 +37,9 @@ struct Parameters {
 
   /// Pair definitions
   std::vector<mch::jpairdef_t> pair_defs;
+
+  /// Starting confi
+  StartConfig start_config = Ferri;
 
   /// Boltzmann constant
   double kB = 1.0;
