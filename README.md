@@ -27,7 +27,7 @@ meson install -C _build
 mcpp_heisenberg_run -g POSCAR -i simulation.toml -o output.h5
 ```
 
-Where `POSCAR` is a valid geometry in the [VASP POSCAR format](https://www.vasp.at/wiki/index.php/POSCAR), and `simulation.toml` contains the parameters:
+Where `POSCAR` is a valid _geometry in the [VASP POSCAR format](https://www.vasp.at/wiki/index.php/POSCAR), and `simulation.toml` contains the parameters:
 
 ```toml
 # system
@@ -66,11 +66,11 @@ In particular, `kB = 8.61733326e-5` and `muB = 5.788381e-5` are relevant when us
 
 The energy for a given configuration $\{S_i\}$ is computed as:
 
-$E = -\sum_{(i,j)} J_{ij} S_i S_j - \mu_B H \sum_i S_i - \sum_i \Delta_i\,S_i^2,$
+$E = -\sum_{(i,j)} J_{ij} S_i S_j - \mu_B H \sum_i S_i - \sum_i \Delta_i S_i^2,$
 
 where $\sum_{(i,j)}$ runs over all pairs $(i, j)$, $J_{ij}$ is the coupling interaction, and is the external magnetic field (applied in the $z$ direction) and $\Delta$ is the magnetic anisotropy.
 
-A heat bath Monte-Carlo is performed, based on $P=\max\{1, \exp\left[-\frac{\Delta E_i}{k_B T}\right]\}$, where $\Delta E_i$ is the change in energy due to flipping spin $i$.
+A heat bath Monte-Carlo is performed, based on $P=\max\left(1, \exp\left[-\frac{\Delta E_i}{k_B T}\right]\right)$, where $\Delta E_i$ is the change in energy due to flipping spin $i$.
 
 ### H5 file
 

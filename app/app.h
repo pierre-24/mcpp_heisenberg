@@ -72,10 +72,26 @@ struct Parameters {
   void print(std::ostream& stream) const;
 };
 
-struct Simulation {
-  mch::Geometry geometry;
-  mch::IsingHamiltonian hamiltonian;
-  mch::IsingMonteCarloRunner runner;
+/// Runner for the simulation
+class Runner {
+ protected:
+  mch::Geometry _geometry;
+  mch::IsingHamiltonian _hamiltonian;
+  mch::IsingMonteCarloRunner _runner;
+  HighFive::File _h5_file;
+
+  /// Write data frames in H5 datasets
+  static void _write_data_frames(
+     HighFive::DataSet& dset_aggs, HighFive::DataSet& dset_configs,
+     uint64_t offset, uint64_t size, uint64_t N,
+     const arma::mat& buffer_aggs, const arma::mat& buffer_configs);
+
+ public:
+  Runner() = delete;
+  explicit Runner(const Parameters& parameters, const Geometry& initial_geometry, HighFive::File&& output_file);
+
+  /// Run the simulation
+  void run(const Parameters& parameters);
 };
 
 /// Set log level
@@ -83,23 +99,6 @@ void set_log_level(plog::Severity default_ = plog::Severity::info);
 
 /// Read TOML
 void read_toml_input(const std::string& input_file, Parameters& parameters);
-
-/// Prepare simulation
-Simulation prepare_simulation(const Parameters& parameters, const std::string& geometry_file);
-
-/// Save simulation to H5
-void save_simulation(HighFive::File& file, const Parameters& simulation_parameters, const Simulation& simulation);
-
-/// Create result dataset
-std::pair<HighFive::DataSet, HighFive::DataSet> create_result_datasets(
-HighFive::Group& result_group,
-const Parameters& simulation_parameters, const Simulation& simulation);
-
-/// Write data frames
-void write_data_frames(
-HighFive::DataSet& dset_aggs, HighFive::DataSet& dset_configs,
-uint64_t offset, uint64_t size, uint64_t N,
-const arma::mat& buffer_aggs, const arma::mat& buffer_configs);
 
 }  // namespace mch::app
 

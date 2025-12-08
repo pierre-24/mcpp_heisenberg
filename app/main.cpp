@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <algorithm>
+#include <utility>
 
 #include <CLI/CLI.hpp>
 
@@ -55,86 +56,43 @@ int main(int argc, char** argv) {
 
   print_title(std::cout, "Read inputs");
 
-  // Read input
+  // Read parameters
   mch::app::Parameters simulation_parameters;
   mch::app::read_toml_input(input_file, simulation_parameters);
 
-  // Create H5
-  HighFive::File h5_file(output_file, HighFive::File::ReadWrite | HighFive::File::Create | HighFive::File::Truncate);
+  std::cout << "*!> Input is now::\n```toml\n";
+  simulation_parameters.print(std::cout);
+  std::cout << "```\n";
 
-  // Prepare simulation
-  auto simulation = mch::app::prepare_simulation(simulation_parameters, geometry_file);
+  // Read geometry
+  std::cout << "!*> Using `" << geometry_file << "`\n";
+  auto geometry_fs = std::make_shared<std::ifstream>(geometry_file);
 
-  mch::app::save_simulation(h5_file, simulation_parameters, simulation);
-
-  print_title(std::cout, "Run MC");
-
-  mch::elapsed::Chrono chrono_run;
-  std::cout << "*!> Run for " << simulation_parameters.N << " steps\n";
-
-  // Create group and buffer
-  auto result_group = h5_file.createGroup("results");
-  auto pair = mch::app::create_result_datasets(result_group, simulation_parameters, simulation);
-  auto dset_aggs = pair.first;
-  auto dset_configs = pair.second;
-
-  arma::mat buffer_aggs(2, simulation_parameters.save_interval);
-  arma::mat buffer_configs(
-      simulation.hamiltonian.number_of_magnetic_sites(), simulation_parameters.save_interval);
-
-  // Run simulation
-  uint64_t isave = 0;
-  double mean_energy = .0;
-  double mean_magnetization = .0;
-  double mean_abs_magnetization = .0;
-  uint64_t offset_first_frame = 0;
-
-  for (uint64_t istep = 0; istep < simulation_parameters.N; ++istep) {
-    simulation.runner.sweep(simulation_parameters.T, simulation_parameters.H);
-
-    // write buffer
-    if (istep > 0 && istep % simulation_parameters.save_interval == 0) {
-      mch::app::write_data_frames(
-          dset_aggs, dset_configs,
-          offset_first_frame, simulation_parameters.save_interval, simulation.hamiltonian.number_of_magnetic_sites(),
-          buffer_aggs, buffer_configs);
-
-      isave++;
-      offset_first_frame = isave * simulation_parameters.save_interval;
-    }
-
-    buffer_aggs.col(istep % simulation_parameters.save_interval) = {
-        simulation.runner.energy(),
-        arma::sum(simulation.runner.spins())};
-
-    buffer_configs.col(istep % simulation_parameters.save_interval) = simulation.runner.spins();
-
-    mean_energy += simulation.runner.energy();
-    mean_magnetization += arma::sum(simulation.runner.spins());
-    mean_abs_magnetization += fabs(arma::sum(simulation.runner.spins()));
+  if (!geometry_fs->is_open()) {
+    std::cerr << fmt::format("Could not open geometry file `{}`", geometry_file) << "\n";
+    return EXIT_FAILURE;
   }
 
-  // write last data frames
-  uint64_t remaining_frames = simulation_parameters.N  - offset_first_frame;
+  auto initial_geometry = mch::Geometry::from_poscar(geometry_fs);
+  geometry_fs->close();
 
-  mch::app::write_data_frames(
-      dset_aggs, dset_configs,
-      offset_first_frame, remaining_frames, simulation.hamiltonian.number_of_magnetic_sites(),
-      buffer_aggs, buffer_configs);
+  std::cout << "Geometry of the unit cell is::\n```\n" << initial_geometry.to_poscar() << "```\n";
 
-  std::cout << "*!> Done running! (took " << chrono_run.format() << ")\n";
+  // Create H5 output
+  std::cout << "!*> Using `" << output_file << "`\n";
+  auto h5_file = HighFive::File(
+      output_file, HighFive::File::ReadWrite | HighFive::File::Create | HighFive::File::Truncate);
 
+  // Prepare simulation
+  print_title(std::cout, "Prepare");
+  auto simulation = mch::app::Runner(simulation_parameters, initial_geometry, std::move(h5_file));
+
+  // run simulation
+  print_title(std::cout, "Run MC");
+  simulation.run(simulation_parameters);
+
+  // The end ;)
   print_title(std::cout, "Epilog");
-
-  // Statistics
-  auto dN = static_cast<double>(simulation_parameters.N * simulation.hamiltonian.number_of_magnetic_sites());
-
-  std::cout << "*!> Statistics over " << simulation_parameters.N << " steps "
-            << "(N=" << simulation.hamiltonian.number_of_magnetic_sites() << ") :: "
-            << "<E>/N = " << mean_energy / dN << ", "
-            << "<m>/N = " << mean_magnetization / dN << ", "
-            << "<|m|>/N = " << mean_abs_magnetization / dN << "\n";
-
   std::cout << "*!> Done (took " << chrono_all.format() << ")\n";
 
   return EXIT_SUCCESS;

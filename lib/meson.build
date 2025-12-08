@@ -52,7 +52,7 @@ endforeach
 
 # -- MAKE LIBRARY
 mcpp_heisenberg_lib = library(
-    meson.project_name(),
+    'lib' + meson.project_name(),
     lib_srcs,
     install : true,
     cpp_args : build_args,

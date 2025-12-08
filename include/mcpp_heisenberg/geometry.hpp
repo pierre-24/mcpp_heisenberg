@@ -105,14 +105,14 @@ class Geometry {
   /// Title
   std::string _title;
   /// Lattice vectors
-  arma::mat _lattice_vectors;
+  arma::mat _lattice_vectors = arma::eye(3, 3);
   /// types & number of each ions
   std::vector<ion_type_t> _ions;
   /// positions (fractional coordinates)
   arma::mat _positions;
 
  public:
-  Geometry() = delete;
+  Geometry() = default;
 
   Geometry(
       const std::string& title, const arma::mat& lattice, const std::vector<ion_type_t>& ions, const arma::mat& pos):

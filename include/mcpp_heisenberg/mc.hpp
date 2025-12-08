@@ -20,7 +20,7 @@ class InitialConfig {
 
   explicit InitialConfig(uint64_t n): _number_of_sites{n} {}
 
-  virtual arma::vec make() const = 0;
+  [[nodiscard]] virtual arma::vec make() const = 0;
 };
 
 /// All spin ups
@@ -97,6 +97,8 @@ class IsingMonteCarloRunner {
   std::vector<std::pair<double, arma::vec>> _frames;
 
  public:
+  IsingMonteCarloRunner() = default;
+
   explicit IsingMonteCarloRunner(
       const IsingHamiltonian& hamiltonian, const arma::vec& initial, double kB = 1.0, double muB = 1.0)
       : _kB{kB}, _muB{muB}, _hamiltonian{hamiltonian} {
