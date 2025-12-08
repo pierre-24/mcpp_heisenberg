@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include <map>
 
 #include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 

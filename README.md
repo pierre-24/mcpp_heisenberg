@@ -40,7 +40,9 @@ pair_defs = [
   ['H', 'H', 2.0, 1.0]
 ]
 
-start_config = 'random'  # either "random" or "ferri"
+spin_values = { H = 0.5 }  # for each spin, you can change the default, which is 1
+
+start_config = 'random'  # either "random", "ferri", or "ferridown"
 
 # simulation
 kB = 1.0  # boltzmann constant in unit of J/T
@@ -70,6 +72,6 @@ After a run, the H5 file contains the following datasets:
 + `hamiltonian/J` (`double (Npairs, )`): for each pair, the value of the magnetic coupling, $J_{ij}$ ;
 + `results/kB&muB` (`double (2,)`): value of the [Boltzmann constant](https://en.wikipedia.org/wiki/Boltzmann_constant) ($k_B$) and of the [Bohr magneton](https://en.wikipedia.org/wiki/Bohr_magneton) ($\mu_B$) used during simulation;
 + `results/T&H` (`double (2,)`): temperature and magnetic field applied during run;
-+ `results/spin_valuees` (`double (Ntypes, )`): for each magnetic/ion type, the initial spin value ($|S_i|$) ;
++ `results/spin_valuees` (`double (Npsins, )`): for each magnetic/ion type, the initial spin value ($|S_i|$) ;
 + `results/configs` (`int8_t (Nsteps, Nspins)`): for each step, `sign(spins)`;
 + `results/aggregated_data` (`double (Nsteps, 2)`): for each step, the (Ising) energy (col 0) and the sum of spins (col 1).

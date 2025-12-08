@@ -83,13 +83,13 @@ void Parameters::update(toml::table& input) {
           subarray.at(3).as_floating_point()->get()});
     }
   }
-  
+
   auto sv_node = input["spin_values"];
   if (!!sv_node) {
     if (!sv_node.is_table()) {
       throw std::runtime_error("`spin_values` must be a table");
     }
-    
+
     auto& table = *sv_node.as_table();
 
     table.for_each([this](const toml::key& key, auto&& val){
@@ -302,16 +302,20 @@ const Parameters& simulation_parameters, const Simulation& simulation) {
   result_group.createDataSet("kB&muB", kB).write(kB);
 
   // spin values
-  std::vector<double> spin_values;
+  auto spin_values = arma::vec(simulation.hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0));
+
+  uint64_t nx = 0;
   for (auto& iondef : simulation.geometry.ions()) {
     if (simulation_parameters.spin_values.contains(iondef.first)) {
-      spin_values.push_back(simulation_parameters.spin_values.at(iondef.first));
-    } else {
-      spin_values.push_back(1.0);
+      spin_values.subvec(nx, nx + iondef.second - 1) *= fabs(simulation_parameters.spin_values.at(iondef.first));
     }
+
+    nx += iondef.second;
   }
 
-  result_group.createDataSet("spin_values", spin_values).write(spin_values);
+  result_group
+      .createDataSet<double>("spin_values", HighFive::DataSpace({simulation.hamiltonian.number_of_magnetic_sites()}))
+      .write_raw(spin_values.memptr());
 
   // aggs
   auto dset_aggs = result_group.createDataSet<double>(
