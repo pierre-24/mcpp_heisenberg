@@ -92,6 +92,8 @@ class IsingMonteCarloRunner {
   double _energy{.0};
   /// Generator
   std::mt19937 _rng;
+  /// First
+  bool _initialized_energy{false};
 
   /// Frames
   std::vector<std::pair<double, arma::vec>> _frames;
@@ -119,7 +121,6 @@ class IsingMonteCarloRunner {
   void set_spins(const arma::vec& config) {
     assert(config.n_rows == _hamiltonian.number_of_magnetic_sites());
     _spins = config;
-    _energy = _hamiltonian.energy(_spins);
   }
 
   /// Get current energy
@@ -127,6 +128,14 @@ class IsingMonteCarloRunner {
 
   /// Sweep over all spins (at a given temperature `T` and a given magnetic field `H`) and switch them if any
   void sweep(double T, double H = .0);
+
+  /// reset energy, must be done if `H` or `T` change
+  void reset_energy(double T, double H = .0) {
+    LOGD << "reset energy for T=" << T << ", H=" << H;
+
+    _energy = _hamiltonian.energy(_spins, _muB * H);
+    _initialized_energy = true;
+  }
 };
 
 }  // namespace mch

@@ -25,8 +25,10 @@ double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i, double
 
   double dE = .0;
 
-  for (auto& neighbor : _neighbor_list.at(i)) {
-    dE += neighbor.second * spins.at(neighbor.first);
+  if (_neighbor_list.contains(i)) {
+    for (auto& neighbor : _neighbor_list.at(i)) {
+      dE += neighbor.second * spins.at(neighbor.first);
+    }
   }
 
   return 2 * spins.at(i) * (dE + muBH);

@@ -8,6 +8,7 @@ namespace mch {
 
 void IsingMonteCarloRunner::sweep(double T, double H) {
   assert(T > 0);
+  assert(_initialized_energy);
 
   LOGV << "Sweep at T=" << T << ", H=" << H;
 

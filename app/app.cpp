@@ -322,6 +322,8 @@ void Runner::run(const Parameters& parameters) {
   mch::elapsed::Chrono chrono_run;
   LOGI << "*!> Run for " << parameters.N << " steps";
 
+  _runner.reset_energy(parameters.T, parameters.H);
+
   // Create buffers for saving
   arma::mat buffer_aggs(2, parameters.save_interval);
   arma::mat buffer_configs(_hamiltonian.number_of_magnetic_sites(), parameters.save_interval);
