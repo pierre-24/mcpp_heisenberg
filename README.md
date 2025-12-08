@@ -42,6 +42,8 @@ pair_defs = [
 
 spin_values = { H = 0.5 }  # for each spin, you can change the default, which is 1
 
+magnetic_anisotropies = { H = 0.1 }  # for each spin, you can change the default, which is 0
+
 start_config = 'random'  # either "random", "ferri", or "ferridown"
 
 # simulation
@@ -57,21 +59,39 @@ deflate_level = 6  # compression level for the `results/configs` dataset
 chunk_size = 1024  # chunk size for the `results/configs` dataset
 ```
 
-The value for `kB` and `muB` will depends on the unit for temperature (`T`), magnetic field (`H`), and energy (`J`).
+The value for `kB` and `muB` will depend on the unit for temperature (`T`), magnetic field (`H`), and energy (`J`).
 In particular, `kB = 8.61733326e-5` and `muB = 5.788381e-5` are relevant when using Kelvin, Tesla, and eV, while `kB = 1` and `muB = 1` in reduced units.
 
 ## Results
 
+The energy for a given configuration $\{S_i\}$ is computed as:
+
+$E = -\sum_{(i,j)} J_{ij} S_i S_j - \mu_B H \sum_i S_i - \sum_i \Delta_i\,S_i^2,$
+
+where $\sum_{(i,j)}$ runs over all pairs $(i, j)$, $J_{ij}$ is the coupling interaction, and is the external magnetic field (applied in the $z$ direction) and $\Delta$ is the magnetic anisotropy.
+
+A heat bath Monte-Carlo is performed, based on $P=\max\{1, \exp\left[-\frac{\Delta E_i}{k_B T}\right]\}$, where $\Delta E_i$ is the change in energy due to flipping spin $i$.
+
+### H5 file
+
 After a run, the H5 file contains the following datasets:
+
+Group `geometry/`:
 
 + `geometry/lattice_vectors` (`double (3, 3)`): lattice vectors;
 + `geometry/ion_types` (`uint64_t (Ntypes, )`): type (chemical symbol) of each magnetic ion/spin;
 + `geometry/ion_numbers` (`str (Ntypes, )`): number of each magnetic ion/spin type;
 + `geometry/positions` (`uint64_t (3, Nspins)`): position of each magnetic ion/spin;
++ `geometry/spin_values` (`double (Npsins, )`): for each magnetic/ion type, the initial spin value ($|S_i|$) ;
++ `geometry/magnetic_anisotropies` (`double (Npsins, )`): for each magnetic/ion type, the magnetic anisotropy ($\Delta_i$) ;
+
+Group `hamiltonian/`:
+
 + `hamiltonian/pairs` (`uint64_t (Npairs, 2)`): list of pairs;
 + `hamiltonian/J` (`double (Npairs, )`): for each pair, the value of the magnetic coupling, $J_{ij}$ ;
-+ `results/kB&muB` (`double (2,)`): value of the [Boltzmann constant](https://en.wikipedia.org/wiki/Boltzmann_constant) ($k_B$) and of the [Bohr magneton](https://en.wikipedia.org/wiki/Bohr_magneton) ($\mu_B$) used during simulation;
-+ `results/T&H` (`double (2,)`): temperature and magnetic field applied during run;
-+ `results/spin_valuees` (`double (Npsins, )`): for each magnetic/ion type, the initial spin value ($|S_i|$) ;
++ `hamiltonian/parameters` (`double (4,)`): value of the [Boltzmann constant](https://en.wikipedia.org/wiki/Boltzmann_constant) ($k_B$), of $T$, of the [Bohr magneton](https://en.wikipedia.org/wiki/Bohr_magneton) ($\mu_B$), and of $H$ used during simulation;
+
+Group `results/`:
+
 + `results/configs` (`int8_t (Nsteps, Nspins)`): for each step, `sign(spins)`;
 + `results/aggregated_data` (`double (Nsteps, 2)`): for each step, the (Ising) energy (col 0) and the sum of spins (col 1).

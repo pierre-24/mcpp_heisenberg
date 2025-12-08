@@ -101,6 +101,23 @@ void Parameters::update(toml::table& input) {
     });
   }
 
+  auto ma_node = input["magnetic_anisotropies"];
+  if (!!ma_node) {
+    if (!ma_node.is_table()) {
+      throw std::runtime_error("`magnetic_anisotropies` must be a table");
+    }
+
+    auto& table = *ma_node.as_table();
+
+    table.for_each([this](const toml::key& key, auto&& val){
+      if (!val.is_integer() && !val.is_floating_point()) {
+        throw std::runtime_error("`magnetic_anisotropies` must contain floats as values");
+      }
+
+      magnetic_anisotropies[std::string(key.str())]= val.as_floating_point()->get();
+    });
+  }
+
   auto sc_node = input["start_config"];
   if (!!sc_node) {
     std::string m = sc_node.value_or("random");
@@ -153,6 +170,13 @@ void Parameters::print(std::ostream& stream) const {
 
   stream << "spin_values = {\n";
   for (auto& pair : spin_values) {
+    stream << "  " << pair.first << " = " << pair.second << ",\n";
+  }
+
+  stream << "}\n";
+
+  stream << "magnetic_anisotropies = {\n";
+  for (auto& pair : magnetic_anisotropies) {
     stream << "  " << pair.first << " = " << pair.second << ",\n";
   }
 
@@ -249,6 +273,21 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
   std::cout << "*!> Make Hamiltonian\n";
   auto hamiltonian = mch::IsingHamiltonian::from_geometry(supercell, parameters.pair_defs);
 
+  double magnetic_anisotropy = .0;
+
+  for (auto& iondef : supercell.ions()) {
+    if (parameters.magnetic_anisotropies.contains(iondef.first)) {
+      double spin_value = 1.0;
+      if (parameters.spin_values.contains(iondef.first)) {
+        spin_value = parameters.spin_values.at(iondef.first);
+      }
+
+      magnetic_anisotropy += parameters.magnetic_anisotropies.at(iondef.first) * pow(spin_value, 2) * iondef.second;
+    }
+  }
+
+  hamiltonian.set_magnetic_anisotropy(magnetic_anisotropy);
+
   // Make runner
   std::cout << "*!> Set initial config\n";
 
@@ -281,25 +320,10 @@ Simulation prepare_simulation(const Parameters& parameters, const std::string& g
   };
 }
 
-void save_simulation(HighFive::File& file, const Simulation& simulation) {
+void save_simulation(HighFive::File& file, const Parameters& simulation_parameters, const Simulation& simulation) {
+  // geometry itself
   auto geometry_group = file.createGroup("geometry");
   simulation.geometry.to_h5_group(geometry_group);
-
-  auto hamiltonian_group = file.createGroup("hamiltonian");
-  simulation.hamiltonian.to_h5_group(hamiltonian_group);
-}
-
-std::pair<HighFive::DataSet, HighFive::DataSet> create_result_datasets(
-HighFive::Group& result_group,
-const Parameters& simulation_parameters, const Simulation& simulation) {
-  LOGI << "Create result datasets";
-
-  // infos
-  std::array<double, 2> info = {simulation_parameters.T, simulation_parameters.H};
-  result_group.createDataSet("T&H", info).write(info);
-
-  std::array<double, 2> kB = {simulation_parameters.kB, simulation_parameters.muB};
-  result_group.createDataSet("kB&muB", kB).write(kB);
 
   // spin values
   auto spin_values = arma::vec(simulation.hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0));
@@ -313,9 +337,42 @@ const Parameters& simulation_parameters, const Simulation& simulation) {
     nx += iondef.second;
   }
 
-  result_group
+  geometry_group
       .createDataSet<double>("spin_values", HighFive::DataSpace({simulation.hamiltonian.number_of_magnetic_sites()}))
       .write_raw(spin_values.memptr());
+
+  // magnetic anisotropies
+  auto magnetic_anisotropies = arma::vec(simulation.hamiltonian.number_of_magnetic_sites(), arma::fill::value(.0));
+
+  nx = 0;
+  for (auto& iondef : simulation.geometry.ions()) {
+    if (simulation_parameters.magnetic_anisotropies.contains(iondef.first)) {
+      magnetic_anisotropies.subvec(nx, nx + iondef.second - 1).fill(
+          simulation_parameters.magnetic_anisotropies.at(iondef.first));
+    }
+
+    nx += iondef.second;
+  }
+
+  geometry_group
+      .createDataSet<double>(
+          "magnetic_anisotropies", HighFive::DataSpace({simulation.hamiltonian.number_of_magnetic_sites()}))
+      .write_raw(magnetic_anisotropies.memptr());
+
+  // hamiltonian
+  auto hamiltonian_group = file.createGroup("hamiltonian");
+  simulation.hamiltonian.to_h5_group(hamiltonian_group);
+
+  // infos
+  std::array<double, 4> info = {
+      simulation_parameters.kB, simulation_parameters.T, simulation_parameters.muB, simulation_parameters.H};
+  hamiltonian_group.createDataSet("parameters", info).write(info);
+}
+
+std::pair<HighFive::DataSet, HighFive::DataSet> create_result_datasets(
+HighFive::Group& result_group,
+const Parameters& simulation_parameters, const Simulation& simulation) {
+  LOGI << "Create result datasets";
 
   // aggs
   auto dset_aggs = result_group.createDataSet<double>(
@@ -362,4 +419,5 @@ const arma::mat& buffer_aggs, const arma::mat& buffer_configs) {
       .select({offset, 0}, {size, N})
       .write(configs);
 }
+
 }  // namespace mch::app

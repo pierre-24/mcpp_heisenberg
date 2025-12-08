@@ -8,7 +8,7 @@
 
 namespace mch {
 
-double IsingHamiltonian::energy(const arma::vec& spins, double H) const {
+double IsingHamiltonian::energy(const arma::vec& spins, double muBH) const {
   assert(spins.n_rows == _n_magnetic_sites);
 
   double energy = .0;
@@ -17,7 +17,24 @@ double IsingHamiltonian::energy(const arma::vec& spins, double H) const {
     energy += pair.second * spins.at(pair.first.first) * spins.at(pair.first.second);
   }
 
-  return -1. * energy - H * arma::sum(spins);  // assume unique pairs
+  return -1. * energy - muBH * arma::sum(spins) - _magnetic_anisotropy;  // assume unique pairs
+}
+
+double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i, double muBH) const {
+  assert(i < _n_magnetic_sites);
+
+  double dE = .0;
+
+  for (auto& neighbor : _neighbor_list.at(i)) {
+    dE += neighbor.second * spins.at(neighbor.first);
+  }
+
+  return 2 * spins.at(i) * (dE + muBH);
+}
+
+std::pair<double, double> IsingHamiltonian::P_i(const arma::vec& spins, uint64_t i, double kBT, double muBH) const {
+  double dE = delta_energy(spins, i, muBH);
+  return {dE, dE <= 0 ? 1 : exp(-dE / kBT)};
 }
 
 IsingHamiltonian IsingHamiltonian::from_geometry(const Geometry& geometry, std::vector<jpairdef_t> pair_defs) {
@@ -70,18 +87,6 @@ IsingHamiltonian IsingHamiltonian::from_geometry(const Geometry& geometry, std::
   LOGI << "<* Done with list, got " << pairs.size() << " pair interactions (took " << chrono.format() << ")";
 
   return {geometry.number_of_atoms(), pairs};
-}
-
-double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i, double H) const {
-  assert(i < _n_magnetic_sites);
-
-  double dE = .0;
-
-  for (auto& neighbor : _neighbor_list.at(i)) {
-    dE += neighbor.second * spins.at(neighbor.first);
-  }
-
-  return 2 * spins.at(i) * (dE + H);
 }
 
 void IsingHamiltonian::to_h5_group(HighFive::Group& group) const {

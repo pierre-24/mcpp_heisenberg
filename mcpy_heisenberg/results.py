@@ -8,7 +8,7 @@ class Result:
     def __init__(self, f: h5py.File):
         self.file = f
 
-        self.T, self.H = self.file['results/T&H'][:]
+        self.kB, self.T, self.muB, self.H = self.file['hamiltonian/parameters'][:]
         self.number_of_sites = self.file['geometry/positions'].shape[1]
         self.N = self.file['results/configs'].shape[0]
 

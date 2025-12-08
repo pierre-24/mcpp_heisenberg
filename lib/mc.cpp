@@ -14,11 +14,11 @@ void IsingMonteCarloRunner::sweep(double T, double H) {
   std::uniform_real_distribution<> dis(.0, 1.);
 
   for (uint64_t ispin = 0; ispin < _hamiltonian.number_of_magnetic_sites(); ++ispin) {
-    double dE = _hamiltonian.delta_energy(_spins, ispin, H / _muB);
+    auto pair = _hamiltonian.P_i(_spins, ispin, _kB * T, _muB * H);
 
-    if ((dE < 0) || (dis(_rng) < exp(-dE / (_kB * T)))) {
+    if (pair.first <= 0 || dis(_rng) < pair.second) {
       _spins.at(ispin) *= -1;
-      _energy += dE;
+      _energy += pair.first;
     }
   }
 }

@@ -35,6 +35,9 @@ struct Parameters {
   /// Spin values
   std::map<std::string, double> spin_values;
 
+  /// Magnetic anisotropies
+  std::map<std::string, double> magnetic_anisotropies;
+
   /// Starting config
   StartConfig start_config = Ferri;
 
@@ -85,7 +88,7 @@ void read_toml_input(const std::string& input_file, Parameters& parameters);
 Simulation prepare_simulation(const Parameters& parameters, const std::string& geometry_file);
 
 /// Save simulation to H5
-void save_simulation(HighFive::File& file, const Simulation& simulation);
+void save_simulation(HighFive::File& file, const Parameters& simulation_parameters, const Simulation& simulation);
 
 /// Create result dataset
 std::pair<HighFive::DataSet, HighFive::DataSet> create_result_datasets(

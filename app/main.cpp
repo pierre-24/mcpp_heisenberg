@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
   // Prepare simulation
   auto simulation = mch::app::prepare_simulation(simulation_parameters, geometry_file);
 
-  mch::app::save_simulation(h5_file, simulation);
+  mch::app::save_simulation(h5_file, simulation_parameters, simulation);
 
   print_title(std::cout, "Run MC");
 

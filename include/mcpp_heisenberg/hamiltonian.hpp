@@ -58,6 +58,8 @@ class IsingHamiltonian {
   std::vector<jpair_t> _pairs;
   /// Neighbour list
   std::map<uint64_t, neighborlist_t> _neighbor_list;
+  /// Magnetic anisotropy (constant term)
+  double _magnetic_anisotropy{.0};
 
  public:
   IsingHamiltonian() = default;
@@ -86,11 +88,17 @@ class IsingHamiltonian {
   /// Get number of pairs
   [[nodiscard]] uint64_t number_of_pairs() const { return _pairs.size(); }
 
+  /// Set magnetic anisotropy
+  void set_magnetic_anisotropy(double m) { _magnetic_anisotropy = m; }
+
   /// Compute the energy
-  [[nodiscard]] double energy(const arma::vec& spins, double H = .0) const;
+  [[nodiscard]] double energy(const arma::vec& spins, double muBH = .0) const;
 
   /// Compute the change in energy due to flip of spin `i`
-  [[nodiscard]] double delta_energy(const arma::vec& spins, uint64_t i, double H = .0) const;
+  [[nodiscard]] double delta_energy(const arma::vec& spins, uint64_t i, double muBH = .0) const;
+
+  /// Compute (ΔE_i, P_i) associated to flipping spin i
+  [[nodiscard]] std::pair<double, double> P_i(const arma::vec& spins, uint64_t i, double kBT, double muBH = .0) const;
 
   /// Get neighbors of i, a list of `(k, J_ik)`, where `k` is the index of the neighbor and `J_ik` is
   /// the coupling strength between these two.
