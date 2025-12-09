@@ -366,6 +366,14 @@ void Runner::run(const Parameters& parameters) {
 
       isave++;
       offset_first_frame = isave * parameters.save_interval;
+
+      auto dN = static_cast<double>(offset_first_frame * _hamiltonian.number_of_magnetic_sites());
+
+      LOGI << "Statistics so far (" << offset_first_frame  << " steps, "
+           << "N=" << _hamiltonian.number_of_magnetic_sites() << ") :: "
+           << "<E>/N = " << mean_energy / dN << ", "
+           << "<m>/N = " << mean_magnetization / dN << ", "
+           << "<|m|>/N = " << mean_abs_magnetization / dN;
     }
 
     buffer_aggs.col(istep % parameters.save_interval) = {_runner.energy(), arma::sum(_runner.spins())};
