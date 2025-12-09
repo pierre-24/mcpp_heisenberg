@@ -30,8 +30,10 @@ class FerriInitialConfig : public InitialConfig{
  public:
   FerriInitialConfig() = delete;
 
-  explicit FerriInitialConfig(const arma::vec& spin_values)
-      : InitialConfig(spin_values.n_rows), _spin_values{spin_values} {}
+  explicit FerriInitialConfig(const arma::vec& spin_values, double val = 1.0)
+      : InitialConfig(spin_values.n_rows), _spin_values{spin_values} {
+    _spin_values *= val;
+  }
 
   [[nodiscard]] arma::vec make() const override {
     return _spin_values;
@@ -43,14 +45,7 @@ class FerriDownInitalConfig: public FerriInitialConfig {
  public:
   FerriDownInitalConfig() = delete;
 
-  explicit FerriDownInitalConfig(const arma::vec& spin_values) : FerriInitialConfig(spin_values) {}
-
-  [[nodiscard]] arma::vec make() const override {
-    auto config = FerriInitialConfig::make();
-    config *= -1;
-
-    return config;
-  }
+  explicit FerriDownInitalConfig(const arma::vec& spin_values) : FerriInitialConfig(spin_values, -1) {}
 };
 
 /// Random configuration
