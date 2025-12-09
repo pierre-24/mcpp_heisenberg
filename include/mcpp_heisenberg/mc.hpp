@@ -11,68 +11,6 @@
 
 namespace mch {
 
-class InitialConfig {
- protected:
-  /// Number of sites
-  uint64_t _number_of_sites{0};
- public:
-  InitialConfig() = delete;
-
-  explicit InitialConfig(uint64_t n): _number_of_sites{n} {}
-
-  [[nodiscard]] virtual arma::vec make() const = 0;
-};
-
-/// All spin ups
-class FerriInitialConfig : public InitialConfig{
- protected:
-  arma::vec _spin_values;
- public:
-  FerriInitialConfig() = delete;
-
-  explicit FerriInitialConfig(const arma::vec& spin_values, double val = 1.0)
-      : InitialConfig(spin_values.n_rows), _spin_values{spin_values} {
-    _spin_values *= val;
-  }
-
-  [[nodiscard]] arma::vec make() const override {
-    return _spin_values;
-  }
-};
-
-/// All spin down
-class FerriDownInitalConfig: public FerriInitialConfig {
- public:
-  FerriDownInitalConfig() = delete;
-
-  explicit FerriDownInitalConfig(const arma::vec& spin_values) : FerriInitialConfig(spin_values, -1) {}
-};
-
-/// Random configuration
-class RandomInitialConfig: public FerriInitialConfig {
- public:
-  RandomInitialConfig() = delete;
-
-  explicit RandomInitialConfig(const arma::vec& spin_values) : FerriInitialConfig(spin_values) {}
-
-  [[nodiscard]] arma::vec make() const override {
-    auto config = FerriInitialConfig::make();
-
-    // initialize random generator
-    std::random_device rd;
-    auto rng = std::mt19937(rd());
-    std::bernoulli_distribution dis(0.5);
-
-    config.for_each([&dis, &rng](auto& val) {
-      if (dis(rng)) {
-        val *= -1;
-      }
-    });
-
-    return config;
-  }
-};
-
 class IsingMonteCarloRunner {
  protected:
   /// Value of Boltzmann constant

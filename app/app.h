@@ -12,16 +12,6 @@
 
 namespace mch::app {
 
-/// Starting configuration
-enum StartConfig {
-  /// Ferrimagnetic (all up) config
-  Ferri,
-  /// All down config
-  FerriDown,
-  /// Random config
-  Random
-};
-
 struct Parameters {
   /// Size of the supercell
   std::array<uint64_t, 3> supercell_size = {1, 1, 1};
@@ -38,8 +28,8 @@ struct Parameters {
   /// Magnetic anisotropies
   std::map<std::string, double> magnetic_anisotropies;
 
-  /// Starting config
-  StartConfig start_config = Ferri;
+  /// Initial configs
+  std::map<std::string, ConfigType> initial_configs;
 
   /// Boltzmann constant
   double kB = 1.0;

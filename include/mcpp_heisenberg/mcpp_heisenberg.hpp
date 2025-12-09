@@ -17,6 +17,7 @@
 #define PROJECT_VERSION "unknown commit"
 #endif
 
+#include <mcpp_heisenberg/configs.hpp>
 #include <mcpp_heisenberg/mc.hpp>
 
 #endif  // INCLUDE_MCPP_HEISENBERG_MCPP_HEISENBERG_HPP_

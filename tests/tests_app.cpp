@@ -47,7 +47,7 @@ TEST_F(AppTestsSuite, TestSaveSimple) {
   parameters.N = 200;
   parameters.supercell_size = {5, 5, 1};
   parameters.H = 0.1;
-  parameters.start_config = mch::app::StartConfig::Random;
+  parameters.initial_configs["H"] = mch::ConfigType::Random;
 
   // run & save
   {

@@ -29,8 +29,7 @@ TEST_F(MCTestsSuite, TestSquareLowTemp) {
   uint64_t MAX = 10000;
 
   double T = 0.1;
-  auto initial = mch::FerriInitialConfig(arma::vec(
-      square_hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0))).make();
+  auto initial = arma::vec(square_hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0));
   auto runner = mch::IsingMonteCarloRunner(square_hamiltonian, initial);
   runner.reset_energy(T);
 

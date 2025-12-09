@@ -40,11 +40,14 @@ pair_defs = [
   ['H', 'H', 2.0, 1.0]
 ]
 
-spin_values = { H = 0.5 }  # for each spin, you can change the default, which is 1
+# for each spin, you can change the default, which is 1
+spin_values = { H = 0.5 }
 
-magnetic_anisotropies = { H = 0.1 }  # for each spin, you can change the default, which is 0
+# for each spin, you can change the default, which is 0
+magnetic_anisotropies = { H = 0.1 } 
 
-start_config = 'random'  # either "random", "ferri", or "ferridown"
+# for each spin, you can change the default, which is "allup"
+initial_configs = { H = 'random' }
 
 # simulation
 kB = 1.0  # boltzmann constant in unit of J/T

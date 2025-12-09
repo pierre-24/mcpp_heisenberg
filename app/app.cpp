@@ -118,19 +118,36 @@ void Parameters::update(toml::table& input) {
     });
   }
 
-  auto sc_node = input["start_config"];
-  if (!!sc_node) {
-    std::string m = sc_node.value_or("random");
-
-    if (m == "R" || m == "random") {
-      start_config = StartConfig::Random;
-    } else if (m == "F" || m == "ferri") {
-      start_config = StartConfig::Ferri;
-    } else if (m == "D" || m == "ferridown") {
-      start_config = StartConfig::FerriDown;
-    } else {
-      throw std::runtime_error("`start_config` must be either `random` or `ferri` or `ferridown`");
+  auto ic_node = input["initial_configs"];
+  if (!!ic_node) {
+    if (!ic_node.is_table()) {
+      throw std::runtime_error("`initial_configs` must be a table");
     }
+
+    auto& table = *ic_node.as_table();
+
+    table.for_each([this](const toml::key& key, auto&& val){
+      if (!val.is_string()) {
+        throw std::runtime_error("`initial_configs` must contain strings as values");
+      }
+
+      std::string v = val.as_string()->get();
+      if (v == "U" || v == "allup") {
+        initial_configs[std::string(key.str())] = ConfigType::AllUp;
+      } else if (v == "D" || v == "alldown") {
+        initial_configs[std::string(key.str())] = ConfigType::AllDown;
+      } else if (v == "R" || v == "random") {
+        initial_configs[std::string(key.str())] = ConfigType::Random;
+      } else if (v == "AFAX" || v == "antiferroax") {
+        initial_configs[std::string(key.str())] = ConfigType::AntiFerroAX;
+      } else if (v == "AFAY" || v == "antiferroay") {
+        initial_configs[std::string(key.str())] = ConfigType::AntiFerroAY;
+      } else if (v == "AFAZ" || v == "antiferroaz") {
+        initial_configs[std::string(key.str())] = ConfigType::AntiFerroAZ;
+      } else {
+        throw std::runtime_error(fmt::format("unknown value `{}` in `initial_configs`", v));
+      }
+    });
   }
 
   // simulation
@@ -163,36 +180,63 @@ void Parameters::print(std::ostream& stream) const {
 
   stream << "pair_defs = [\n  # A, B, d, J\n";
   for (auto& pair : pair_defs) {
-    stream << "  ['" << pair.site_1 << "', '" << pair.site_2 << "', " << pair.distance << ", " << pair.J << "]\n";
+    stream << "  ['" << pair.site_1 << "', '" << pair.site_2 << "', " << pair.distance << ", " << pair.J << "],\n";
   }
 
   stream << "]\n";
 
-  stream << "spin_values = {\n";
-  for (auto& pair : spin_values) {
-    stream << "  " << pair.first << " = " << pair.second << ",\n";
+  if (spin_values.size() > 0) {
+    stream << "spin_values = {";
+    for (auto& pair : spin_values) {
+      stream << "  " << pair.first << " = " << pair.second << ", ";
+    }
+
+    stream << "}\n";
   }
 
-  stream << "}\n";
+  if (magnetic_anisotropies.size() > 0) {
+    stream << "magnetic_anisotropies = {";
+    for (auto& pair : magnetic_anisotropies) {
+      stream << "  " << pair.first << " = " << pair.second << ", ";
+    }
 
-  stream << "magnetic_anisotropies = {\n";
-  for (auto& pair : magnetic_anisotropies) {
-    stream << "  " << pair.first << " = " << pair.second << ",\n";
+    stream << "}\n";
   }
 
-  stream << "}\n";
+  if (initial_configs.size() > 0) {
+    stream << "initial_configs = {";
+    for (auto& pair : initial_configs) {
+      stream << "  " << pair.first << " = ";
 
-  stream << "start_config = '";
+      switch (pair.second) {
+        case ConfigType::AllUp:
+          stream << "'allup'";
+          break;
+        case ConfigType::AllDown:
+          stream << "'alldown'";
+          break;
+        case ConfigType::Random:
+          stream << "'random'";
+          break;
+        case ConfigType::AntiFerroAX:
+          stream << "'AFAX'";
+          break;
+        case ConfigType::AntiFerroAY:
+          stream << "'AFAY'";
+          break;
+        case ConfigType::AntiFerroAZ:
+          stream << "'AFAZ'";
+          break;
+        default:
+          stream << "'unknown'";
+          break;
+      }
 
-  if (start_config == Random) {
-    stream << "random";
-  } else if (start_config == Ferri) {
-    stream << "ferri";
-  } else if (start_config == FerriDown) {
-    stream << "ferridown";
+      stream << ", ";
+    }
+
+    stream << "}\n";
   }
-
-  stream << "'\n";
 
   stream << "# simulation\n"
          << "kB = " << kB << "\n"
@@ -270,25 +314,18 @@ const Parameters& parameters, const Geometry& initial_geometry, HighFive::File&&
   // Make initial config & save
   LOGI << "*!> Set initial config";
 
-  auto spin_values = arma::vec(_hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0));
+  auto spin_values = make_config(_geometry, parameters.spin_values, parameters.initial_configs);
 
-  uint64_t nx = 0;
-  for (auto& iondef : _geometry.ions()) {
-    if (parameters.spin_values.contains(iondef.first)) {
-      spin_values.subvec(nx, nx + iondef.second - 1) *= parameters.spin_values.at(iondef.first);
-    }
-
-    nx += iondef.second;
-  }
+  arma::vec absspv = arma::abs(spin_values);
 
   geometry_group
       .createDataSet<double>("spin_values", HighFive::DataSpace({_hamiltonian.number_of_magnetic_sites()}))
-      .write_raw(spin_values.memptr());
+      .write_raw(absspv.memptr());
 
   // magnetic anisotropies
   auto magnetic_anisotropies = arma::vec(_hamiltonian.number_of_magnetic_sites(), arma::fill::value(.0));
 
-  nx = 0;
+  auto nx = 0;
   for (auto& iondef : _geometry.ions()) {
     if (parameters.magnetic_anisotropies.contains(iondef.first)) {
       magnetic_anisotropies.subvec(nx, nx + iondef.second - 1).fill(parameters.magnetic_anisotropies.at(iondef.first));
@@ -307,13 +344,7 @@ const Parameters& parameters, const Geometry& initial_geometry, HighFive::File&&
   // Make runner
   LOGI << "*!> Make runner";
 
-  if (parameters.start_config == StartConfig::Random) {
-    spin_values = mch::RandomInitialConfig(spin_values).make();
-  } else if (parameters.start_config == StartConfig::Ferri) {
-    spin_values = mch::FerriInitialConfig(spin_values).make();
-  } else if (parameters.start_config == StartConfig::FerriDown) {
-    spin_values = mch::FerriDownInitalConfig(spin_values).make();
-  }
+  spin_values = make_config(_geometry, parameters.spin_values, parameters.initial_configs);
 
   _runner = mch::IsingMonteCarloRunner(_hamiltonian, spin_values, parameters.kB, parameters.muB);
 }
