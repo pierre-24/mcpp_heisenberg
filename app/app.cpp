@@ -303,7 +303,8 @@ const Parameters& parameters, const Geometry& initial_geometry, HighFive::File&&
 
   // Prepare hamiltonian & save it
   LOGI << "*!> Make Hamiltonian";
-  _hamiltonian = mch::IsingHamiltonian::from_geometry(_geometry, parameters.pair_defs, parameters.magnetic_anisotropies);
+  _hamiltonian = mch::IsingHamiltonian::from_geometry(
+      _geometry, parameters.pair_defs, parameters.magnetic_anisotropies);
 
   auto hamiltonian_group = _h5_file.createGroup("hamiltonian");
   _hamiltonian.to_h5_group(hamiltonian_group);
@@ -353,7 +354,7 @@ void Runner::run(const Parameters& parameters) {
 
   dapl_configs.add(HighFive::Deflate{parameters.deflate_level});
 
-  auto dset_configs = result_group.createDataSet<int8_t>(
+  auto dset_configs = result_group.createDataSet<float>(
       "configs",
       HighFive::DataSpace({parameters.N, _hamiltonian.number_of_magnetic_sites()}),
       dapl_configs);
@@ -424,23 +425,14 @@ void Runner::_write_data_frames(
     const arma::mat& buffer_aggs, const arma::mat& buffer_configs) {
   LOGI << "Write frames [" << offset << "," << offset + size << ")";
 
-  // write energies
   dset_aggs.select({offset, 0}, {size, 2})
       .write_raw(buffer_aggs.memptr());
 
-  // write spins after transformation
-  std::vector<std::vector<int8_t>> configs;
-  buffer_configs.each_col([&configs, &N](auto& col) {
-    std::vector<int8_t> config(N);
-    std::transform(
-        col.cbegin(), col.cend(), config.begin(), [](auto& val) { return (val < 0 ? -1 : 1); });
-
-    configs.push_back(config);
-  });
+  auto rbuff = arma::conv_to<arma::Mat<float>>::from(buffer_configs);
 
   dset_configs
       .select({offset, 0}, {size, N})
-      .write(configs);
+      .write_raw(rbuff.memptr());
 }
 
 }  // namespace mch::app

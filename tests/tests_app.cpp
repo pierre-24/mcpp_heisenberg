@@ -111,21 +111,20 @@ TEST_F(AppTestsSuite, TestSaveSimple) {
 
     auto results_group = file.getGroup("results");
 
-    arma::mat configs(25, parameters.N);
-    results_group.getDataSet("configs").read_raw(configs.memptr());
-
     arma::mat aggs(2, parameters.N);
     results_group.getDataSet("aggregated_data").read_raw(aggs.memptr());
+
+    arma::Mat<float> xconfigs(25, parameters.N);
+    results_group.getDataSet("configs").read_raw(xconfigs.memptr());
+    arma::mat configs = arma::conv_to<arma::mat>::from(xconfigs);
 
     auto hamiltonian = mch::IsingHamiltonian(25, xpairs, magnetic_anisotropies);
 
     for (uint64_t istep = 0; istep < parameters.N; ++istep) {
-      arma::vec config(configs.col(istep));
-
-      EXPECT_EQ(aggs.at(1, istep), static_cast<double>(arma::sum(config)));
+      EXPECT_EQ(aggs.at(1, istep), static_cast<double>(arma::sum(configs.col(istep))));
       EXPECT_NEAR(
           aggs.at(0, istep),
-          hamiltonian.energy(config, parameters.muB * parameters.H), 1e-5);
+          hamiltonian.energy(configs.col(istep), parameters.muB * parameters.H), 1e-5);
     }
   }
 }

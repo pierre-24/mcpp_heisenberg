@@ -28,9 +28,6 @@ class IsingMonteCarloRunner {
   /// First
   bool _initialized_energy{false};
 
-  /// Frames
-  std::vector<std::pair<double, arma::vec>> _frames;
-
  public:
   IsingMonteCarloRunner() = default;
 
