@@ -40,8 +40,6 @@ TEST_F(MCTestsSuite, TestSquareLowTemp) {
     stats.row(i) = {runner.energy(), fabs(arma::sum(runner.spins()))};
   }
 
-  LOGD << "last config is " << runner.spins();
-
   EXPECT_NEAR(arma::mean(stats.col(0)) / static_cast<double>(N * N), -2, 1e-3);  // <E>
   EXPECT_NEAR(arma::mean(stats.col(1)) / static_cast<double>(N * N), 1., 1e-3);  // <|m|>
 }
@@ -62,5 +60,26 @@ TEST_F(MCTestsSuite, TestSquareHighTemp) {
     stats.row(i) = {runner.energy(), fabs(arma::sum(runner.spins()))};
   }
 
+  LOGD << arma::mean(stats.col(1)) / static_cast<double>(N * N);
+  EXPECT_TRUE(arma::mean(stats.col(1)) / static_cast<double>(N * N) < .5);  // <|m|>
+}
+
+/// Test quantum Ising (in the high temperature limit, so random orientation)
+TEST_F(MCTestsSuite, TestQuantumIsing) {
+  uint64_t MAX = 10;
+
+  double T = 10.0;
+  auto initial = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.5));
+  auto runner = mch::QuantumIsingMonteCarloRunner(hamiltonian, initial, initial);
+  runner.reset_energy(T);
+
+  arma::mat stats(MAX, 2);
+
+  for (uint64_t i = 0; i < MAX; ++i) {
+    runner.sweep(T);
+    stats.row(i) = {runner.energy(), fabs(arma::sum(runner.spins()))};
+  }
+
+  LOGD << arma::mean(stats.col(1)) / static_cast<double>(N * N);
   EXPECT_TRUE(arma::mean(stats.col(1)) / static_cast<double>(N * N) < .5);  // <|m|>
 }

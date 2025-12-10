@@ -155,12 +155,18 @@ void Parameters::update(toml::table& input) {
     });
   }
 
+  use_quantum_spins = input["use_quantum_spins"].value_or(use_quantum_spins);
+
   // simulation
   T = input["T"].value_or(T);
   H = input["H"].value_or(H);
   kB = input["kB"].value_or(kB);
   muB = input["muB"].value_or(muB);
   N = input["N"].value_or(N);
+
+  if (T <= 0) {
+    throw std::runtime_error("`T` should be strictly positive");
+  }
 
   // results
   save_interval = input["save_interval"].value_or(save_interval);
@@ -174,7 +180,8 @@ void Parameters::update(toml::table& input) {
 
 void Parameters::print(std::ostream& stream) const {
   stream << "# system\n"
-         << "supercell = [" << supercell_size[0] << ", " << supercell_size[1] << ", " << supercell_size[2] << "]\n";
+         << "supercell = [" << supercell_size[0] << ", " << supercell_size[1] << ", " << supercell_size[2] << "]\n"
+         << "use_quantum_spins = " << (use_quantum_spins ? "true" : "false") << "\n";
 
   stream << "magnetic_sites = [";
   for (auto& ms : magnetic_sites) {
@@ -314,30 +321,43 @@ const Parameters& parameters, const Geometry& initial_geometry, HighFive::File&&
   auto hamiltonian_group = _h5_file.createGroup("hamiltonian");
   _hamiltonian.to_h5_group(hamiltonian_group);
 
-  // Make initial config & save
-  LOGI << "*!> Set initial config";
+  // Make initial max_spins & save
+  LOGI << "*!> Set initial spins";
 
   auto spin_values = make_config(_geometry, parameters.spin_values, parameters.initial_configs);
 
-  arma::vec absspv = arma::abs(spin_values);
+  arma::vec max_spins(_geometry.number_of_atoms(), arma::fill::value(1.0));
+
+  uint64_t nx = 0;
+  for (auto& iondef : _geometry.ions()) {
+    // set initial value
+    if (parameters.spin_values.contains(iondef.first)) {
+      max_spins.subvec(nx, nx + iondef.second - 1) *= parameters.spin_values.at(iondef.first);
+    }
+  }
 
   geometry_group
       .createDataSet<double>("spin_values", HighFive::DataSpace({_hamiltonian.number_of_magnetic_sites()}))
-      .write_raw(absspv.memptr());
+      .write_raw(max_spins.memptr());
 
   // Make runner
   LOGI << "*!> Make runner";
 
   spin_values = make_config(_geometry, parameters.spin_values, parameters.initial_configs);
 
-  _runner = mch::IsingMonteCarloRunner(_hamiltonian, spin_values, parameters.kB, parameters.muB);
+  if (!parameters.use_quantum_spins) {
+    _runner = std::make_unique<mch::IsingMonteCarloRunner>(_hamiltonian, spin_values, parameters.kB, parameters.muB);
+  } else {
+    _runner = std::make_unique<mch::QuantumIsingMonteCarloRunner>(
+        _hamiltonian, spin_values, max_spins, parameters.kB, parameters.muB);
+  }
 }
 
 void Runner::run(const Parameters& parameters) {
   mch::elapsed::Chrono chrono_run;
   LOGI << "*!> Run for " << parameters.N << " steps";
 
-  _runner.reset_energy(parameters.T, parameters.H);
+  _runner->reset_energy(parameters.T, parameters.H);
 
   // Create buffers for saving
   arma::mat buffer_aggs(2, parameters.save_interval);
@@ -373,7 +393,7 @@ void Runner::run(const Parameters& parameters) {
   uint64_t offset_first_frame = 0;
 
   for (uint64_t istep = 0; istep < parameters.N; ++istep) {
-    _runner.sweep(parameters.T, parameters.H);
+    _runner->sweep(parameters.T, parameters.H);
 
     // write buffer
     if (istep > 0 && istep % parameters.save_interval == 0) {
@@ -395,13 +415,13 @@ void Runner::run(const Parameters& parameters) {
            << "<|m|>/N = " << mean_abs_magnetization / dN;
     }
 
-    buffer_aggs.col(istep % parameters.save_interval) = {_runner.energy(), arma::sum(_runner.spins())};
+    buffer_aggs.col(istep % parameters.save_interval) = {_runner->energy(), arma::sum(_runner->spins())};
 
-    buffer_configs.col(istep % parameters.save_interval) = _runner.spins();
+    buffer_configs.col(istep % parameters.save_interval) = _runner->spins();
 
-    mean_energy += _runner.energy();
-    mean_magnetization += arma::sum(_runner.spins());
-    mean_abs_magnetization += fabs(arma::sum(_runner.spins()));
+    mean_energy += _runner->energy();
+    mean_magnetization += arma::sum(_runner->spins());
+    mean_abs_magnetization += fabs(arma::sum(_runner->spins()));
   }
 
   // write last data frames

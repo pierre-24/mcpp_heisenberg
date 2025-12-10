@@ -43,6 +43,8 @@ pair_defs = [
 # for each spin, you can change the default, which is 1
 spin_values = { H = 0.5 }
 
+use_quantum_spins = true # use the full manifold of 2S+1 values, default is false
+
 # for each spin, you can change the default, which is 0
 magnetic_anisotropies = { H = 0.1 } 
 

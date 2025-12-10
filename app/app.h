@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <map>
+#include <memory>
 
 #include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 
@@ -30,6 +31,9 @@ struct Parameters {
 
   /// Initial configs
   std::map<std::string, ConfigType> initial_configs;
+
+  /// Use quantum spins
+  bool use_quantum_spins = false;
 
   /// Boltzmann constant
   double kB = 1.0;
@@ -67,7 +71,7 @@ class Runner {
  protected:
   mch::Geometry _geometry;
   mch::IsingHamiltonian _hamiltonian;
-  mch::IsingMonteCarloRunner _runner;
+  std::unique_ptr<mch::MonteCarloRunner> _runner;
   HighFive::File _h5_file;
 
   /// Write data frames in H5 datasets
