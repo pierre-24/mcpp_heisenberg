@@ -67,13 +67,13 @@ In particular, `kB = 8.61733326e-5` and `muB = 5.788381e-5` are relevant when us
 
 ## Results
 
-The energy for a given configuration $\{S_i\}$ is computed as:
+The energy for a given configuration $(S_0, S_1, \ldots)$ is computed as:
 
-$E = -\sum_{(i,j)} J_{ij} S_i S_j - \mu_B H \sum_i S_i - \sum_i \Delta_i S_i^2,$
+$$E(S_0, S_1, \ldots) = -\sum_{(i,j)} J_{ij} S_i S_j - \mu_B H \sum_i S_i - \sum_i \Delta_i |S_i|^2,$$
 
-where $\sum_{(i,j)}$ runs over all pairs $(i, j)$, $J_{ij}$ is the coupling interaction, and is the external magnetic field (applied in the $z$ direction) and $\Delta$ is the magnetic anisotropy.
+where $\sum_{(i,j)}$ runs over all pairs $(i, j)$, $J_{ij}$ is the coupling interaction, $H$ is the external magnetic field (applied in the $z$ direction) and $\Delta_i$ is the magnetic anisotropy/crystal field associated to spin $i$.
 
-A heat bath Monte-Carlo is performed, based on $P=\max\left(1, \exp\left[-\frac{\Delta E_i}{k_B T}\right]\right)$, where $\Delta E_i$ is the change in energy due to flipping spin $i$.
+A heat bath Monte-Carlo is performed, based on $P(S_i\rightarrow S_i')=\min\left(1, \exp\left[-\frac{\Delta E}{k_B T}\right]\right)$, where $\Delta E$ is the change in energy due to changing $S_i$ to $S_i'$.
 
 ### H5 file
 
@@ -89,12 +89,12 @@ Group `geometry/`:
 
 Group `hamiltonian/`:
 
-+ `hamiltonian/pairs` (`uint64_t (Npairs, 2)`): list of pairs;
++ `hamiltonian/pairs` (`uint64_t (Npairs, 2)`): list of pairs $(i, j)$;
 + `hamiltonian/J` (`double (Npairs, )`): for each pair, the value of the magnetic coupling, $J_{ij}$ ;
 + `hamiltonian/magnetic_anisotropies` (`double (Npsins, )`): for each magnetic/ion type, the magnetic anisotropy ($\Delta_i$) ;
-+ `hamiltonian/parameters` (`double (4,)`): value of the [Boltzmann constant](https://en.wikipedia.org/wiki/Boltzmann_constant) ($k_B$), of $T$, of the [Bohr magneton](https://en.wikipedia.org/wiki/Bohr_magneton) ($\mu_B$), and of $H$ used during simulation;
 
 Group `results/`:
 
++ `hamiltonian/parameters` (`double (4,)`): value of the [Boltzmann constant](https://en.wikipedia.org/wiki/Boltzmann_constant) ($k_B$), of $T$, of the [Bohr magneton](https://en.wikipedia.org/wiki/Bohr_magneton) ($\mu_B$), and of $H$ used during simulation;
 + `results/configs` (`int8_t (Nsteps, Nspins)`): for each step, `sign(spins)`;
 + `results/aggregated_data` (`double (Nsteps, 2)`): for each step, the (Ising) energy (col 0) and the sum of spins (col 1).

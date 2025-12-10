@@ -92,11 +92,6 @@ TEST_F(AppTestsSuite, TestSaveSimple) {
     hamiltonian_group.getDataSet("J").read(Js);
     EXPECT_EQ(Js, std::vector<double>(50, 1.0));
 
-    std::vector<double> xparameters;
-    hamiltonian_group.getDataSet("parameters").read(xparameters);
-    std::vector<double> yparameters = {parameters.kB, parameters.T, parameters.muB, parameters.H};
-    EXPECT_EQ(xparameters, yparameters);
-
     std::vector<double> magnetic_anisotropies;
     hamiltonian_group.getDataSet("magnetic_anisotropies").read(magnetic_anisotropies);
     EXPECT_EQ(magnetic_anisotropies, std::vector<double>(25, 0.0));
@@ -110,6 +105,11 @@ TEST_F(AppTestsSuite, TestSaveSimple) {
     }
 
     auto results_group = file.getGroup("results");
+
+    std::vector<double> xparameters;
+    results_group.getDataSet("parameters").read(xparameters);
+    std::vector<double> yparameters = {parameters.kB, parameters.T, parameters.muB, parameters.H};
+    EXPECT_EQ(xparameters, yparameters);
 
     arma::mat aggs(2, parameters.N);
     results_group.getDataSet("aggregated_data").read_raw(aggs.memptr());

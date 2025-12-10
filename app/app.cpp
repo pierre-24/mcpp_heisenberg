@@ -97,7 +97,12 @@ void Parameters::update(toml::table& input) {
         throw std::runtime_error("`spin_values` must contain floats as values");
       }
 
-      spin_values[std::string(key.str())]= val.as_floating_point()->get();
+      double v = val.as_floating_point()->get();
+      if (v <= 0) {
+        throw std::runtime_error("`spin_values` must contain strictly positive floats as values");
+      }
+
+      spin_values[std::string(key.str())]= v;
     });
   }
 
@@ -309,9 +314,6 @@ const Parameters& parameters, const Geometry& initial_geometry, HighFive::File&&
   auto hamiltonian_group = _h5_file.createGroup("hamiltonian");
   _hamiltonian.to_h5_group(hamiltonian_group);
 
-  std::array<double, 4> info = {parameters.kB, parameters.T, parameters.muB, parameters.H};
-  hamiltonian_group.createDataSet("parameters", info).write(info);
-
   // Make initial config & save
   LOGI << "*!> Set initial config";
 
@@ -342,8 +344,12 @@ void Runner::run(const Parameters& parameters) {
   arma::mat buffer_configs(_hamiltonian.number_of_magnetic_sites(), parameters.save_interval);
 
   // Create dataset for saving
-  auto result_group = _h5_file.createGroup("results");
-  auto dset_aggs = result_group.createDataSet<double>(
+  auto results_group = _h5_file.createGroup("results");
+
+  std::array<double, 4> info = {parameters.kB, parameters.T, parameters.muB, parameters.H};
+  results_group.createDataSet("parameters", info).write(info);
+
+  auto dset_aggs = results_group.createDataSet<double>(
       "aggregated_data", HighFive::DataSpace({parameters.N, 2}));
 
   HighFive::DataSetCreateProps dapl_configs;
@@ -354,7 +360,7 @@ void Runner::run(const Parameters& parameters) {
 
   dapl_configs.add(HighFive::Deflate{parameters.deflate_level});
 
-  auto dset_configs = result_group.createDataSet<float>(
+  auto dset_configs = results_group.createDataSet<float>(
       "configs",
       HighFive::DataSpace({parameters.N, _hamiltonian.number_of_magnetic_sites()}),
       dapl_configs);
