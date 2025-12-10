@@ -334,6 +334,8 @@ const Parameters& parameters, const Geometry& initial_geometry, HighFive::File&&
     if (parameters.spin_values.contains(iondef.first)) {
       max_spins.subvec(nx, nx + iondef.second - 1) *= parameters.spin_values.at(iondef.first);
     }
+
+    nx += iondef.second;
   }
 
   geometry_group

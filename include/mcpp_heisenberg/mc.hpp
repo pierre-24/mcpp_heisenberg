@@ -31,6 +31,8 @@ class MonteCarloRunner {
     _rng = std::mt19937(rd());
   }
 
+  virtual ~MonteCarloRunner() = default;
+
   /// Sweep over all spins (at a given temperature `T` and a given magnetic field `H`) and switch them if any
   virtual void sweep(double T, double H = .0)  = 0;
 
