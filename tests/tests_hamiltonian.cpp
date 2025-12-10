@@ -16,7 +16,7 @@ TEST_F(HamiltonianTestsSuite, TestLinear) {
       {{0, 3}, 1.},
       {{1, 2}, 1.},
       {{2, 3}, 1.},
-  });
+  }, {.0, .0, .0, .0});
 
   auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::ones);
 
@@ -35,7 +35,7 @@ TEST_F(HamiltonianTestsSuite, TestChain) {
 
   auto geometry = mch::Geometry("chain", lattice, {{"H", 1}}, positions).to_supercell(4, 1, 1);
 
-  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}}, {});
 
   EXPECT_EQ(hamiltonian.number_of_magnetic_sites(), 4);
 
@@ -54,7 +54,7 @@ TEST_F(HamiltonianTestsSuite, TestSquare) {
 
   auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(4, 4, 1);
 
-  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}}, {});
 
   EXPECT_EQ(hamiltonian.number_of_magnetic_sites(), 16);
 
@@ -77,7 +77,7 @@ TEST_F(HamiltonianTestsSuite, TestCubic) {
                       .filter_atoms({"H"})
                       .to_supercell(4, 4, 4);
 
-  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}}, {});
 
   EXPECT_EQ(hamiltonian.number_of_magnetic_sites(), 64);
 
@@ -97,7 +97,7 @@ TEST_F(HamiltonianTestsSuite, TestSquareDeltaE) {
 
   auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(4, 4, 1);
 
-  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}}, {});
 
   for (int i = 0; i < 50; ++i) {
     auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::randu);
@@ -111,7 +111,7 @@ TEST_F(HamiltonianTestsSuite, TestSquareDeltaE) {
   }
 }
 
-/// Test ΔE due to flippling one spin (with H)
+/// Test ΔE due to flippling one spin (with H & non-integer spin)
 TEST_F(HamiltonianTestsSuite, TestSquareDeltaEwithH) {
   double H = 1.0;
 
@@ -124,16 +124,46 @@ TEST_F(HamiltonianTestsSuite, TestSquareDeltaEwithH) {
 
   auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(4, 4, 1);
 
-  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}}, {});
 
   for (int i = 0; i < 50; ++i) {
     auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::randu);
-    spins.for_each([](double& e) { e = e > .5 ? 1.0 : -1.0; });
+    spins.for_each([](double& e) { e = e > .5 ? .5 : -.5; });
 
     double Eb = hamiltonian.energy(spins, H);
     double dE = hamiltonian.delta_energy(spins, 1, -spins.at(1), H);
 
     spins.at(1) *= -1;
+    EXPECT_NEAR(dE, hamiltonian.energy(spins, H) - Eb, 1e-4);
+  }
+}
+
+/// Test ΔE due to flippling one spin (with H & non-integer spin & magnetic anisotropies)
+TEST_F(HamiltonianTestsSuite, TestSquareDeltaEwithHandMA) {
+  double H = 1.0;
+
+  arma::mat lattice = arma::eye(3, 3);
+  lattice.at(0, 0) = 2;
+  lattice.at(1, 1) = 2;
+  lattice.at(2, 2) = 100;
+
+  arma::mat positions = arma::mat(1, 3);
+
+  auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(4, 4, 1);
+
+  auto hamiltonian = mch::IsingHamiltonian::from_geometry(
+      geometry,
+      {{"H", "H", 2.0, 1.0}},
+      {{"H", .1}});
+
+  for (int i = 0; i < 50; ++i) {
+    auto spins = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::randu);
+    spins.for_each([](double& e) { e = e > .5 ? 1.5 : -1.5; });
+
+    double Eb = hamiltonian.energy(spins, H);
+    double dE = hamiltonian.delta_energy(spins, 1, .5, H);
+
+    spins.at(1) = .5;
     EXPECT_NEAR(dE, hamiltonian.energy(spins, H) - Eb, 1e-4);
   }
 }

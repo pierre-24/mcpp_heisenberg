@@ -7,7 +7,7 @@
 
 class MCTestsSuite : public MCHTestsSuite {
  protected:
-  mch::IsingHamiltonian square_hamiltonian;
+  mch::IsingHamiltonian hamiltonian;
   uint64_t N = 10;
 
   MCTestsSuite() {
@@ -20,7 +20,7 @@ class MCTestsSuite : public MCHTestsSuite {
 
     auto geometry = mch::Geometry("square", lattice, {{"H", 1}}, positions).to_supercell(N, N, 1);
 
-    square_hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}});
+    hamiltonian = mch::IsingHamiltonian::from_geometry(geometry, {{"H", "H", 2.0, 1.0}}, {});
   }
 };
 
@@ -29,8 +29,8 @@ TEST_F(MCTestsSuite, TestSquareLowTemp) {
   uint64_t MAX = 10000;
 
   double T = 0.1;
-  auto initial = arma::vec(square_hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0));
-  auto runner = mch::IsingMonteCarloRunner(square_hamiltonian, initial);
+  auto initial = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0));
+  auto runner = mch::IsingMonteCarloRunner(hamiltonian, initial);
   runner.reset_energy(T);
 
   arma::mat stats(MAX, 2);
@@ -44,4 +44,23 @@ TEST_F(MCTestsSuite, TestSquareLowTemp) {
 
   EXPECT_NEAR(arma::mean(stats.col(0)) / static_cast<double>(N * N), -2, 1e-3);  // <E>
   EXPECT_NEAR(arma::mean(stats.col(1)) / static_cast<double>(N * N), 1., 1e-3);  // <|m|>
+}
+
+/// Test the high temperature limit (spins almost randomly oriented)
+TEST_F(MCTestsSuite, TestSquareHighTemp) {
+  uint64_t MAX = 10000;
+
+  double T = 5.0;
+  auto initial = arma::vec(hamiltonian.number_of_magnetic_sites(), arma::fill::value(1.0));
+  auto runner = mch::IsingMonteCarloRunner(hamiltonian, initial);
+  runner.reset_energy(T);
+
+  arma::mat stats(MAX, 2);
+
+  for (uint64_t i = 0; i < MAX; ++i) {
+    runner.sweep(T);
+    stats.row(i) = {runner.energy(), fabs(arma::sum(runner.spins()))};
+  }
+
+  EXPECT_TRUE(arma::mean(stats.col(1)) / static_cast<double>(N * N) < .5);  // <|m|>
 }

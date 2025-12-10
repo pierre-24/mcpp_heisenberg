@@ -85,13 +85,13 @@ Group `geometry/`:
 + `geometry/ion_types` (`uint64_t (Ntypes, )`): type (chemical symbol) of each magnetic ion/spin;
 + `geometry/ion_numbers` (`str (Ntypes, )`): number of each magnetic ion/spin type;
 + `geometry/positions` (`uint64_t (3, Nspins)`): position of each magnetic ion/spin;
-+ `geometry/spin_values` (`double (Npsins, )`): for each magnetic/ion type, the initial spin value ($|S_i|$) ;
-+ `geometry/magnetic_anisotropies` (`double (Npsins, )`): for each magnetic/ion type, the magnetic anisotropy ($\Delta_i$) ;
++ `geometry/spin_values` (`double (Npsins, )`): for each magnetic/ion type, the maximal spin value ($|S_i|$) ;
 
 Group `hamiltonian/`:
 
 + `hamiltonian/pairs` (`uint64_t (Npairs, 2)`): list of pairs;
 + `hamiltonian/J` (`double (Npairs, )`): for each pair, the value of the magnetic coupling, $J_{ij}$ ;
++ `hamiltonian/magnetic_anisotropies` (`double (Npsins, )`): for each magnetic/ion type, the magnetic anisotropy ($\Delta_i$) ;
 + `hamiltonian/parameters` (`double (4,)`): value of the [Boltzmann constant](https://en.wikipedia.org/wiki/Boltzmann_constant) ($k_B$), of $T$, of the [Bohr magneton](https://en.wikipedia.org/wiki/Bohr_magneton) ($\mu_B$), and of $H$ used during simulation;
 
 Group `results/`:

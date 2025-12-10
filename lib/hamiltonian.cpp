@@ -17,7 +17,7 @@ double IsingHamiltonian::energy(const arma::vec& spins, double muBH) const {
     energy += pair.second * spins.at(pair.first.first) * spins.at(pair.first.second);
   }
 
-  return -1. * energy - muBH * arma::sum(spins) - _magnetic_anisotropy;  // assume unique pairs
+  return -1. * energy - muBH * arma::sum(spins) - arma::dot(_magnetic_anisotropies, arma::pow(spins, 2));
 }
 
 double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i, double target_value, double muBH) const {
@@ -31,7 +31,8 @@ double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i, double
     }
   }
 
-  return (spins.at(i) - target_value) * (dE + muBH);
+  return (spins.at(i) - target_value) * (dE + muBH) +
+         (pow(spins.at(i), 2) - pow(target_value, 2)) * _magnetic_anisotropies.at(i);
 }
 
 std::pair<double, double> IsingHamiltonian::P_i(
@@ -40,21 +41,33 @@ std::pair<double, double> IsingHamiltonian::P_i(
   return {dE, dE <= 0 ? 1 : exp(-dE / kBT)};
 }
 
-IsingHamiltonian IsingHamiltonian::from_geometry(const Geometry& geometry, std::vector<jpairdef_t> pair_defs) {
+IsingHamiltonian IsingHamiltonian::from_geometry(
+    const Geometry& geometry, std::vector<jpairdef_t> pair_defs,
+    const std::map<std::string, double>& magnetic_anisotropies) {
   elapsed::Chrono chrono;
   LOGI << "*> Create pair list from geometry (" << geometry.number_of_atoms() << " magnetic sites)";
 
   // prepare geometry
   auto& positions = geometry.positions();
+  auto anisotropies = arma::vec(geometry.number_of_atoms(), arma::fill::value(.0));
 
-  // list ion types
+  auto nx = 0;
   auto ion_types = std::vector<std::string>();
   for (auto& it : geometry.ions()) {
     for (uint64_t iatm = 0; iatm < it.second; ++iatm) {
+      // list ion types
       ion_types.push_back(it.first);
+
+      // make anisotropies
+      if (magnetic_anisotropies.contains(it.first)) {
+        anisotropies.subvec(nx, nx + it.second - 1).fill(magnetic_anisotropies.at(it.first));
+      }
     }
+
+    nx += it.second;
   }
 
+  // make pairs
   std::vector<jpair_t> pairs;
 
   for (uint64_t iatm = 0; iatm < geometry.number_of_atoms(); ++iatm) {
@@ -89,7 +102,7 @@ IsingHamiltonian IsingHamiltonian::from_geometry(const Geometry& geometry, std::
 
   LOGI << "<* Done with list, got " << pairs.size() << " pair interactions (took " << chrono.format() << ")";
 
-  return {geometry.number_of_atoms(), pairs};
+  return { geometry.number_of_atoms(), pairs, anisotropies };
 }
 
 void IsingHamiltonian::to_h5_group(HighFive::Group& group) const {
@@ -108,6 +121,11 @@ void IsingHamiltonian::to_h5_group(HighFive::Group& group) const {
 
   auto dset_Js = group.createDataSet("J", Js);
   dset_Js.write(Js);
+
+  // Save magnetic anisotropies
+  group.createDataSet<double>(
+      "magnetic_anisotropies", HighFive::DataSpace({_n_magnetic_sites}))
+      .write_raw(_magnetic_anisotropies.memptr());
 }
 
 }  // namespace mch

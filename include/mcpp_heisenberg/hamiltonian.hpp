@@ -58,14 +58,17 @@ class IsingHamiltonian {
   std::vector<jpair_t> _pairs;
   /// Neighbour list
   std::map<uint64_t, neighborlist_t> _neighbor_list;
-  /// Magnetic anisotropy (constant term)
-  double _magnetic_anisotropy{.0};
+  /// Magnetic anisotropies
+  arma::vec _magnetic_anisotropies;
 
  public:
   IsingHamiltonian() = default;
 
   /// Create an Heisenberg hamiltonian, with `N` sites and `pairs` pair interactions
-  IsingHamiltonian(uint64_t N, const std::vector<jpair_t>& pairs): _n_magnetic_sites{N}, _pairs(pairs) {
+  IsingHamiltonian(uint64_t N, const std::vector<jpair_t>& pairs, const arma::vec& magnetic_anisotropies)
+      : _n_magnetic_sites{N}, _pairs(pairs), _magnetic_anisotropies{magnetic_anisotropies} {
+    assert(magnetic_anisotropies.n_rows == N);
+
     // build the neighbor list
     for (auto& pair : _pairs) {
       if (!_neighbor_list.contains(pair.first.first)) {
@@ -88,8 +91,8 @@ class IsingHamiltonian {
   /// Get number of pairs
   [[nodiscard]] uint64_t number_of_pairs() const { return _pairs.size(); }
 
-  /// Set magnetic anisotropy
-  void set_magnetic_anisotropy(double m) { _magnetic_anisotropy = m; }
+  /// get magnetic anisotropies
+  const arma::vec& magnetic_anisotropies() const { return _magnetic_anisotropies; }
 
   /// Compute the energy
   [[nodiscard]] double energy(const arma::vec& spins, double muBH = .0) const;
@@ -110,7 +113,9 @@ class IsingHamiltonian {
   }
 
   /// Create IsingHamiltonian from a geometry
-  static IsingHamiltonian from_geometry(const Geometry& geometry, std::vector<jpairdef_t> pair_defs);
+  static IsingHamiltonian from_geometry(
+      const Geometry& geometry, std::vector<jpairdef_t> pair_defs,
+      const std::map<std::string, double>& magnetic_anisotropies);
 
   /// Save in H5 group
   void to_h5_group(HighFive::Group& group) const;

@@ -85,10 +85,6 @@ TEST_F(AppTestsSuite, TestSaveSimple) {
     geometry_group.getDataSet("spin_values").read(spin_values);
     EXPECT_EQ(spin_values, std::vector<double>(25, 1.0));
 
-    std::vector<double> magnetic_anisotropies;
-    geometry_group.getDataSet("magnetic_anisotropies").read(magnetic_anisotropies);
-    EXPECT_EQ(magnetic_anisotropies, std::vector<double>(25, 0.0));
-
     // hamiltonian
     auto hamiltonian_group = file.getGroup("hamiltonian");
 
@@ -100,6 +96,10 @@ TEST_F(AppTestsSuite, TestSaveSimple) {
     hamiltonian_group.getDataSet("parameters").read(xparameters);
     std::vector<double> yparameters = {parameters.kB, parameters.T, parameters.muB, parameters.H};
     EXPECT_EQ(xparameters, yparameters);
+
+    std::vector<double> magnetic_anisotropies;
+    hamiltonian_group.getDataSet("magnetic_anisotropies").read(magnetic_anisotropies);
+    EXPECT_EQ(magnetic_anisotropies, std::vector<double>(25, 0.0));
 
     // results
     std::vector<std::array<uint64_t, 2>> pairs;
@@ -117,7 +117,7 @@ TEST_F(AppTestsSuite, TestSaveSimple) {
     arma::mat aggs(2, parameters.N);
     results_group.getDataSet("aggregated_data").read_raw(aggs.memptr());
 
-    auto hamiltonian = mch::IsingHamiltonian(25, xpairs);
+    auto hamiltonian = mch::IsingHamiltonian(25, xpairs, magnetic_anisotropies);
 
     for (uint64_t istep = 0; istep < parameters.N; ++istep) {
       arma::vec config(configs.col(istep));

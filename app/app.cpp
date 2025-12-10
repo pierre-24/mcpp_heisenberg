@@ -303,7 +303,7 @@ const Parameters& parameters, const Geometry& initial_geometry, HighFive::File&&
 
   // Prepare hamiltonian & save it
   LOGI << "*!> Make Hamiltonian";
-  _hamiltonian = mch::IsingHamiltonian::from_geometry(_geometry, parameters.pair_defs);
+  _hamiltonian = mch::IsingHamiltonian::from_geometry(_geometry, parameters.pair_defs, parameters.magnetic_anisotropies);
 
   auto hamiltonian_group = _h5_file.createGroup("hamiltonian");
   _hamiltonian.to_h5_group(hamiltonian_group);
@@ -321,25 +321,6 @@ const Parameters& parameters, const Geometry& initial_geometry, HighFive::File&&
   geometry_group
       .createDataSet<double>("spin_values", HighFive::DataSpace({_hamiltonian.number_of_magnetic_sites()}))
       .write_raw(absspv.memptr());
-
-  // magnetic anisotropies
-  auto magnetic_anisotropies = arma::vec(_hamiltonian.number_of_magnetic_sites(), arma::fill::value(.0));
-
-  auto nx = 0;
-  for (auto& iondef : _geometry.ions()) {
-    if (parameters.magnetic_anisotropies.contains(iondef.first)) {
-      magnetic_anisotropies.subvec(nx, nx + iondef.second - 1).fill(parameters.magnetic_anisotropies.at(iondef.first));
-    }
-
-    nx += iondef.second;
-  }
-
-  _hamiltonian.set_magnetic_anisotropy(arma::dot(magnetic_anisotropies, arma::pow(spin_values, 2)));
-
-  geometry_group
-      .createDataSet<double>(
-          "magnetic_anisotropies", HighFive::DataSpace({_hamiltonian.number_of_magnetic_sites()}))
-      .write_raw(magnetic_anisotropies.memptr());
 
   // Make runner
   LOGI << "*!> Make runner";
