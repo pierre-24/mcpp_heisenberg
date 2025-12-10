@@ -95,10 +95,11 @@ class IsingHamiltonian {
   [[nodiscard]] double energy(const arma::vec& spins, double muBH = .0) const;
 
   /// Compute the change in energy due to flip of spin `i`
-  [[nodiscard]] double delta_energy(const arma::vec& spins, uint64_t i, double muBH = .0) const;
+  [[nodiscard]] double delta_energy(const arma::vec& spins, uint64_t i, double target_value, double muBH = .0) const;
 
   /// Compute (ΔE_i, P_i) associated to flipping spin i
-  [[nodiscard]] std::pair<double, double> P_i(const arma::vec& spins, uint64_t i, double kBT, double muBH = .0) const;
+  [[nodiscard]] std::pair<double, double> P_i(
+      const arma::vec& spins, uint64_t i, double kBT, double target_value, double muBH = .0) const;
 
   /// Get neighbors of i, a list of `(k, J_ik)`, where `k` is the index of the neighbor and `J_ik` is
   /// the coupling strength between these two.

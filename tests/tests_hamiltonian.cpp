@@ -104,7 +104,7 @@ TEST_F(HamiltonianTestsSuite, TestSquareDeltaE) {
     spins.for_each([](double& e) { e = e > .5 ? 1.0 : -1.0; });
 
     double Eb = hamiltonian.energy(spins);
-    double dE = hamiltonian.delta_energy(spins, 1);
+    double dE = hamiltonian.delta_energy(spins, 1, -spins.at(1));
 
     spins.at(1) *= -1;
     EXPECT_NEAR(dE, hamiltonian.energy(spins) - Eb, 1e-4);
@@ -131,7 +131,7 @@ TEST_F(HamiltonianTestsSuite, TestSquareDeltaEwithH) {
     spins.for_each([](double& e) { e = e > .5 ? 1.0 : -1.0; });
 
     double Eb = hamiltonian.energy(spins, H);
-    double dE = hamiltonian.delta_energy(spins, 1, H);
+    double dE = hamiltonian.delta_energy(spins, 1, -spins.at(1), H);
 
     spins.at(1) *= -1;
     EXPECT_NEAR(dE, hamiltonian.energy(spins, H) - Eb, 1e-4);

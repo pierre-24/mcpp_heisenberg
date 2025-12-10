@@ -20,7 +20,7 @@ double IsingHamiltonian::energy(const arma::vec& spins, double muBH) const {
   return -1. * energy - muBH * arma::sum(spins) - _magnetic_anisotropy;  // assume unique pairs
 }
 
-double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i, double muBH) const {
+double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i, double target_value, double muBH) const {
   assert(i < _n_magnetic_sites);
 
   double dE = .0;
@@ -31,11 +31,12 @@ double IsingHamiltonian::delta_energy(const arma::vec& spins, uint64_t i, double
     }
   }
 
-  return 2 * spins.at(i) * (dE + muBH);
+  return (spins.at(i) - target_value) * (dE + muBH);
 }
 
-std::pair<double, double> IsingHamiltonian::P_i(const arma::vec& spins, uint64_t i, double kBT, double muBH) const {
-  double dE = delta_energy(spins, i, muBH);
+std::pair<double, double> IsingHamiltonian::P_i(
+    const arma::vec& spins, uint64_t i, double kBT, double target_value, double muBH) const {
+  double dE = delta_energy(spins, i, target_value, muBH);
   return {dE, dE <= 0 ? 1 : exp(-dE / kBT)};
 }
 
