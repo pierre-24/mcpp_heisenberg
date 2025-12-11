@@ -45,3 +45,37 @@ class Result:
         x_shifted = x - np.mean(x)
         autocorr = np.array([np.dot(x_shifted[:len(x)-t],x_shifted[t:]) / (len(x) - t) for t in range(tmax)])
         return autocorr / autocorr[0]
+
+    def get_dist_autocorr(self, r_max: float = 10.0, round_: int = 3):
+        positions = self.file['geometry/positions'][:]
+        lattice = self.file['geometry/lattice_vectors'][:]
+        configs = self.file['results/configs']
+
+        N = {}
+        statistics = {}
+
+        for i in range(self.number_of_sites):
+            conf_i = configs[:, i]
+
+            for j in range(i + 1, self.number_of_sites):
+                # use PBC
+                r = positions[:, j] - positions[:, i]
+                for k in range(3):
+                    if r[k] > .5:
+                        r[k] -= 1
+                    elif r[k] < -.5:
+                        r[k] += 1
+
+                # get norm
+                norm = round(np.linalg.norm(sum(r[k] * lattice[:, k] for k in range(3))), round_)
+
+                if norm <= r_max:
+                    conf_j = configs[:, j]
+                    if norm not in N:
+                        N[norm] = 0
+                        statistics[norm] = 0
+
+                    N[norm] += 1
+                    statistics[norm] += np.mean(conf_i * conf_j)
+
+        return np.array([(0, 1)] + [(k, statistics[k] / N[k]) for k in sorted(N.keys())])
