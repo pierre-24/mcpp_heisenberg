@@ -1,12 +1,11 @@
-#include <filesystem>
 #include <cstdio>
-#include <utility>
+#include <filesystem>
+#include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include <mcpp_heisenberg/mcpp_heisenberg.hpp>
-#include "../app/app.h"
-
+#include "mcpp_heisenberg/app.h"
 #include "tests.hpp"
 
 class AppTestsSuite : public MCHTestsSuite {

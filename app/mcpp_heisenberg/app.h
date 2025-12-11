@@ -1,15 +1,14 @@
-#ifndef APP_APP_H_
-#define APP_APP_H_
+#ifndef APP_MCPP_HEISENBERG_APP_H_
+#define APP_MCPP_HEISENBERG_APP_H_
 
-#include <vector>
-#include <string>
-#include <utility>
 #include <map>
 #include <memory>
-
-#include <mcpp_heisenberg/mcpp_heisenberg.hpp>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <toml++/toml.hpp>
+#include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 
 namespace mch::app {
 
@@ -96,4 +95,4 @@ void read_toml_input(const std::string& input_file, Parameters& parameters);
 
 }  // namespace mch::app
 
-#endif  // APP_APP_H_
+#endif  // APP_MCPP_HEISENBERG_APP_H_

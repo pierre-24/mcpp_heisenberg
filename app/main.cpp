@@ -1,14 +1,14 @@
-#include <string>
+#include <algorithm>
 #include <iostream>
 #include <memory>
-#include <algorithm>
+#include <string>
 #include <utility>
 
 #include <CLI/CLI.hpp>
 
 #include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 
-#include "app.h"
+#include "mcpp_heisenberg/app.h"
 
 void print_title(std::ostream & stream, const std::string& title) {
   stream << "\n  _";

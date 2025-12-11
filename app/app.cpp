@@ -9,7 +9,7 @@
 
 #include <mcpp_heisenberg/mcpp_heisenberg.hpp>
 
-#include "app.h"
+#include "mcpp_heisenberg/app.h"
 
 namespace mch::app {
 
