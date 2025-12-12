@@ -51,11 +51,13 @@ class Result:
         lattice = self.file['geometry/lattice_vectors'][:]
         configs = self.file['results/configs']
 
-        N = {}
-        statistics = {}
+        N = {0: 0}
+        statistics = {0 : 0}
 
         for i in range(self.number_of_sites):
             conf_i = configs[:, i]
+            N[0] += 1
+            statistics[0] += np.mean(conf_i ** 2)
 
             for j in range(i + 1, self.number_of_sites):
                 # use PBC
@@ -78,4 +80,4 @@ class Result:
                     N[norm] += 1
                     statistics[norm] += np.mean(conf_i * conf_j)
 
-        return np.array([(0, 1)] + [(k, statistics[k] / N[k]) for k in sorted(N.keys())])
+        return np.array([(k, statistics[k] / N[k]) for k in sorted(N.keys())])
